@@ -28,13 +28,13 @@
 						ctx.save();
 						ctx.transform(0, 0.5, 0.5, 0, 0, 0); // TOP LEFT
 						if (step == startStep - 1) {
-							drawF(step, isColor, "green");
+							drawF(step, isColor, "orange");
 						}
 						drawF(step, isColor, color);
 						ctx.restore();
 						ctx.transform(-0.5, 0, 0, 0.5, 500, 0); // TOP RIGHT
 						if (step == startStep - 1) {
-							drawF(step, isColor, "red");
+							drawF(step, isColor, "green");
 						}
 						drawF(step, isColor, color);
 						ctx.restore();
@@ -46,7 +46,7 @@
 						ctx.restore();
 						ctx.transform(-0.25, 0, 0, -0.25, 437, 437); // BOTTOM RIGHT
 						if (step == startStep - 1) {
-							drawF(step, isColor, "orange");
+							drawF(step, isColor, "red");
 						}
 						drawF(step, isColor, color);
 					} else drawFigure(isColor, color);
