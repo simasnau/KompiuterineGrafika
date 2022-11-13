@@ -2,6 +2,12 @@
 $(function () {
 	const stats = initStats();
 
+	//TODO normali lenta, apvalus karalius, kitos basic figuros is bloku, jas sudeti ant lentos, karaliaus karuna su binary ops,
+	// ambient and spot light (kugine),
+	// seseliai, blizgios medziagos
+	// interaktyvuis gui parametrai:
+	// pasirenkamas kugines sviesos tikslas (target), sviesos stiprumas, ijungiamas/isjungiamas scenos sukimasis
+
 	// create a scene, that will hold all our elements such as objects, cameras and lights.
 	const scene = new THREE.Scene();
 
