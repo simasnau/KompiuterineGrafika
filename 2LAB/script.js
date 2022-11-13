@@ -2,11 +2,11 @@
 $(function () {
 	const stats = initStats();
 
-	//TODO normali lenta, apvalus karalius, kitos basic figuros is bloku, jas sudeti ant lentos, karaliaus karuna su binary ops,
+	//TODO kitos basic figuros is bloku, karaliaus karuna su binary ops,
 	// ambient and spot light (kugine),
 	// seseliai, blizgios medziagos
 	// interaktyvuis gui parametrai:
-	// pasirenkamas kugines sviesos tikslas (target), sviesos stiprumas, ijungiamas/isjungiamas scenos sukimasis
+	// pasirenkamas kugines sviesos tikslas (target), sviesos stiprumas
 
 	// create a scene, that will hold all our elements such as objects, cameras and lights.
 	const scene = new THREE.Scene();
@@ -48,24 +48,21 @@ $(function () {
 	// add the output of the renderer to the html element
 	$("#WebGL-output").append(renderer.domElement);
 
+	let spin = false;
+
 	const controls = new (function () {
 		this.fov = 75;
+		this.spin = false;
 	})();
 
 	const gui = new dat.GUI();
 	gui.add(controls, "fov", 25, 100);
+	gui.add(controls, 'spin').onChange(function () {
+		spin = !spin;
+	});
 
-	const firstMesh = createChessFigureMesh();
-	moveChessPieceOnBoard(firstMesh, 'C4');
-	scene.add(firstMesh);
-
-	const secondMesh = createChessFigureMesh();
-	moveChessPieceOnBoard(secondMesh, 'B2');
-	scene.add(secondMesh);
-
-	// const pawn = createPawnBox();
-	// moveChessPieceOnBoard(pawn, 'A2');
-	// scene.add(pawn);
+	const boardGroup = populateBoard();
+	scene.add(boardGroup);
 
 	const camControl = new THREE.TrackballControls(camera, renderer.domElement);
 	render();
@@ -78,10 +75,15 @@ $(function () {
 
 		camControl.update();
 
+		if (spin) {
+			plane.rotation.z += .01;
+			boardGroup.rotation.y += .01;
+		}
+
 		requestAnimationFrame(render);
 		renderer.render(scene, camera);
 	}
-	function createChessFigureMesh() {
+	function createChessFigureMesh(color) {
 		const pointsX = [
 			240, 202, 214, 225, 210,
 			200, 225, 225, 220, 215,
@@ -99,9 +101,9 @@ $(function () {
 			points.push(new THREE.Vector3(25-pointsX[i]/10, 0.01, (pointsY[pointsX.length - 1]-pointsY[i]-174)/10));
 		}
 
-		const latheGeometry = new THREE.LatheGeometry(points, Math.ceil(12), 0, 2 * Math.PI);
+		const latheGeometry = new THREE.LatheGeometry(points, 12, 0, 2 * Math.PI);
 
-		const meshMaterial = new THREE.MeshLambertMaterial({color: 0x444444});
+		const meshMaterial = new THREE.MeshLambertMaterial({color: color});
 		meshMaterial.side = THREE.DoubleSide;
 
 		const mesh = new THREE.Mesh(latheGeometry, meshMaterial);
@@ -109,33 +111,64 @@ $(function () {
 		return mesh;
 	}
 
-	// function createPawnBox() {
-	// 	// create box
-	// 	const width = 10;
-	// 	const height = 2;
-	// 	const depth = 10;
-	//
-	// 	const boxGeometry = new THREE.BoxGeometry(width, height, depth);
-	// 	const boxMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
-	//
-	// 	// stack of boxes
-	// 	// for (let i = 0; i < 5; i++) {
-	// 		const box = new THREE.Mesh(boxGeometry, boxMaterial);
-	// 		box.castShadow = true;
-	// 		box.position.y = (0.5 + 2 * 1.2) * height;
-	// 		// scene.add(box);
-	// 	// }
-	//
-	// 	// const latheGeometry = new THREE.LatheGeometry(points, Math.ceil(12), 0, 2 * Math.PI);
-	// 	//
-	// 	// const meshMaterial = new THREE.MeshLambertMaterial({color: 0x444444});
-	// 	// meshMaterial.side = THREE.DoubleSide;
-	// 	//
-	// 	// const mesh = new THREE.Mesh(latheGeometry, meshMaterial);
-	// 	// mesh.rotateX(-Math.PI / 2);
-	// 	// return mesh;
-	// 	return box;
-	// }
+	function createPawnBox(color) {
+		// create box
+		const width = 10;
+		const height = 20;
+		const depth = 10;
+
+		const boxGeometry = new THREE.CubeGeometry(width, height, depth);
+		const boxMaterial = new THREE.MeshLambertMaterial({ color: color });
+
+		const box = new THREE.Mesh(boxGeometry, boxMaterial);
+		box.castShadow = true;
+		return box;
+	}
+
+	function moveChessPieceOnBoardWithHeight(chessPiece, positionString, y) {
+		moveChessPieceOnBoard(chessPiece, positionString)
+		chessPiece.position.y = y;
+	}
+
+	function populateBoard() {
+		const group = new THREE.Object3D();
+
+		const pawnColumns = 'ABCDEFGH'
+		let pawnRows = [2, 7];
+		let colors = [0xFFFFFF, 0x111111]
+
+		for (let i = 0; i < pawnRows.length; i++) {
+			for (let j = 0; j < pawnColumns.length; j++) {
+				let position = pawnColumns.charAt(j) + pawnRows[i];
+				const newFigure = createPawnBox(colors[i]);
+				moveChessPieceOnBoardWithHeight(newFigure, position, newFigure.geometry.height / 2);
+				group.add(newFigure)
+			}
+		}
+
+		const kingColumns = 'E'
+		let rows = [1, 8];
+
+		for (let i = 0; i < rows.length; i++) {
+			for (let j = 0; j < kingColumns.length; j++) {
+				let position = kingColumns.charAt(j) + rows[i];
+				const newFigure = createChessFigureMesh(colors[i]);
+				moveChessPieceOnBoard(newFigure, position);
+				group.add(newFigure)
+			}
+		}
+
+		const rookColumns = 'ABCDFGH'
+		for (let i = 0; i < rows.length; i++) {
+			for (let j = 0; j < rookColumns.length; j++) {
+				let position = rookColumns.charAt(j) + rows[i];
+				const newFigure = createPawnBox(colors[i]);
+				moveChessPieceOnBoardWithHeight(newFigure, position, newFigure.geometry.height / 2);
+				group.add(newFigure)
+			}
+		}
+		return group;
+	}
 
 	function moveChessPieceOnBoard(chessPiece, positionString) {
 		if (positionString.length !== 2) {
