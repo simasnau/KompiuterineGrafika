@@ -2,7 +2,7 @@
 $(function () {
 	const stats = initStats();
 
-	//TODO kitos basic figuros is bloku, karaliaus karuna su binary ops,
+	//TODO kitos basic figuros is bloku,
 	// ambient and spot light (kugine),
 	// seseliai, blizgios medziagos
 	// interaktyvuis gui parametrai:
@@ -85,16 +85,16 @@ $(function () {
 	}
 	function createChessFigureMesh(color) {
 		const pointsX = [
-			240, 202, 214, 225, 210,
+			251, 202, 214, 225, 210,
 			200, 225, 225, 220, 215,
 			208, 205, 197, 186, 190,
-			169, 168, 172, 161, 160,
+			169, 168, 172, 161, 160, 251
 		];
 		const pointsY = [
 			85, 97, 124, 145, 155,
 			175, 180, 205, 235, 265,
 			283, 295, 307, 316, 325,
-			334, 343, 352, 361, 370,
+			334, 343, 352, 361, 370, 370
 		];
 		const points = [];
 		for (let i = 0; i < pointsX.length; i++) {
@@ -106,8 +106,44 @@ $(function () {
 		const meshMaterial = new THREE.MeshLambertMaterial({color: color});
 		meshMaterial.side = THREE.DoubleSide;
 
-		const mesh = new THREE.Mesh(latheGeometry, meshMaterial);
-		mesh.rotateX(-Math.PI / 2);
+		const latheMesh = new THREE.Mesh(latheGeometry, meshMaterial);
+		latheMesh.rotateX(-Math.PI / 2);
+
+		const crossShape = new THREE.Shape();
+		crossShape.moveTo( 0,0 );
+		crossShape.lineTo( 2, 0 );
+		crossShape.lineTo( 2, 2 );
+		crossShape.lineTo( 4, 2 );
+		crossShape.lineTo( 4, 4 );
+		crossShape.lineTo( 2, 4 );
+		crossShape.lineTo( 2, 6 );
+		crossShape.lineTo( 0, 6 );
+		crossShape.lineTo( 0, 4 );
+		crossShape.lineTo( -2, 4 );
+		crossShape.lineTo( -2, 2 );
+		crossShape.lineTo( 0, 2 );
+		crossShape.lineTo( 0, 0 );
+
+		const extrudeSettings = {
+			steps: 1,
+			amount: 1,
+			bevelEnabled: false,
+		};
+
+		const geometry = new THREE.ExtrudeGeometry( crossShape, extrudeSettings );
+		const cross = new THREE.Mesh( geometry, meshMaterial ) ;
+		cross.position.y=10.5;
+		cross.position.x=-1;
+
+		let crossBSP = new ThreeBSP(cross);
+		let meshBSP = new ThreeBSP(latheMesh);
+		let resultBSP = meshBSP.union(crossBSP);
+
+		let mesh = resultBSP.toMesh();
+		mesh.geometry.computeFaceNormals();
+		mesh.geometry.computeVertexNormals();
+		mesh.material=meshMaterial;
+
 		return mesh;
 	}
 
