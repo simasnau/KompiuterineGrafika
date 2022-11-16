@@ -4,8 +4,6 @@ $(function () {
 
 	//TODO kitos basic figuros is bloku,
 	// blizgios medziagos
-	// interaktyvuis gui parametrai:
-	// pasirenkamas kugines sviesos tikslas (target), sviesos stiprumas
 
 	// create a scene, that will hold all our elements such as objects, cameras and lights.
 	const scene = new THREE.Scene();
@@ -47,6 +45,7 @@ $(function () {
 	spotLight.position.set(-60, 100, 125);
 	spotLight.castShadow = true;
 	scene.add(spotLight);
+	scene.add(spotLight.target);
 
 	const helper = new THREE.CameraHelper( spotLight.shadow.camera );
 	scene.add( helper );
@@ -61,12 +60,18 @@ $(function () {
 	let spin = false;
 
 	const controls = new (function () {
-		this.fov = 75;
+		this.spotLightIntensity = 1;
+		this.spotLightTargetX = 0;
+		this.spotLightTargetY = 0;
+		this.spotLightTargetZ = 0;
 		this.spin = false;
 	})();
 
 	const gui = new dat.GUI();
-	gui.add(controls, "fov", 25, 100);
+	gui.add(controls, "spotLightIntensity", 0, 2);
+	gui.add(controls, "spotLightTargetX", -100, 100);
+	gui.add(controls, "spotLightTargetY", -100, 100);
+	gui.add(controls, "spotLightTargetZ", -100, 100);
 	gui.add(controls, 'spin').onChange(function () {
 		spin = !spin;
 	});
@@ -80,7 +85,8 @@ $(function () {
 	function render() {
 		stats.update();
 
-		camera.fov = controls.fov;
+		spotLight.intensity = controls.spotLightIntensity;
+		spotLight.target.position.set(controls.spotLightTargetX, controls.spotLightTargetY, controls.spotLightTargetZ)
 		camera.updateProjectionMatrix();
 
 		camControl.update();
