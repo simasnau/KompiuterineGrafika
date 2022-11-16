@@ -23,12 +23,34 @@ $(function () {
 
 	renderer.setClearColor(0xeeeeee, 1.0);
 	renderer.setSize(window.innerWidth, window.innerHeight);
+	// renderer.shadowMapEnabled = true;
 
 	// create the ground plane
 	const planeGeometry = new THREE.PlaneGeometry(180, 180);
 	const texture = THREE.ImageUtils.loadTexture("textures/ChessBoardSvg.svg");
 	const textureMaterial = new THREE.MeshBasicMaterial({ map: texture });
+
+	// const shadowMaterial = new THREE.ShadowMaterial();
+	// // shadowMaterial.opacity = 0.2;
+	//
+	// const lambertMaterial = new THREE.MeshLambertMaterial({color: 0xffffff})
+	// lambertMaterial.shadowSide = THREE.FrontSide;
+	//
+	// const phongMaterial = new THREE.MeshPhongMaterial({
+	// 	// map: textureMaterial,
+	// 	side: THREE.DoubleSide, // important!
+	// 	alphaTest: 0.1,
+	// });
+	//
+	//
+	//
 	const plane = new THREE.Mesh(planeGeometry, textureMaterial);
+	// plane.receiveShadow = true;
+	// plane.customDepthMaterial = new THREE.MeshDepthMaterial({
+	// 	// map: texture,
+	// 	// depthPacking: THREE.RGBADepthPacking,
+	// 	alphaTest: 0.1
+	// })
 
 	plane.rotation.x = -0.5 * Math.PI;
 	plane.position.x = 0;
@@ -41,9 +63,9 @@ $(function () {
 	directionalLight.position.set(-20, 40, 60);
 	scene.add(directionalLight);
 
-	// add subtle ambient lighting
-	const ambientLight = new THREE.AmbientLight(0x292929);
-	scene.add(ambientLight);
+	// // add subtle ambient lighting
+	// const ambientLight = new THREE.AmbientLight(0x292929);
+	// scene.add(ambientLight);
 
 	// add the output of the renderer to the html element
 	$("#WebGL-output").append(renderer.domElement);
