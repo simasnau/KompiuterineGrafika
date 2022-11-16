@@ -109,33 +109,40 @@ $(function () {
 		const latheMesh = new THREE.Mesh(latheGeometry, meshMaterial);
 		latheMesh.rotateX(-Math.PI / 2);
 
-		const crossShape = new THREE.Shape();
-		crossShape.moveTo( 0,0 );
-		crossShape.lineTo( 2, 0 );
-		crossShape.lineTo( 2, 2 );
-		crossShape.lineTo( 4, 2 );
-		crossShape.lineTo( 4, 4 );
-		crossShape.lineTo( 2, 4 );
-		crossShape.lineTo( 2, 6 );
-		crossShape.lineTo( 0, 6 );
-		crossShape.lineTo( 0, 4 );
-		crossShape.lineTo( -2, 4 );
-		crossShape.lineTo( -2, 2 );
-		crossShape.lineTo( 0, 2 );
-		crossShape.lineTo( 0, 0 );
+		const crossYPosition = 13;
+		const crossXPosition = 0;
+		const cutYDistance = 1.5;
+		const cutXDistance = 1.5;
 
-		const extrudeSettings = {
-			steps: 1,
-			amount: 1,
-			bevelEnabled: false,
-		};
+		const crossGeometry = new THREE.CubeGeometry(5, 5, 1);
+		const crossMesh = new THREE.Mesh(crossGeometry, meshMaterial);
+		crossMesh.position.y=crossYPosition;
+		crossMesh.position.x=crossXPosition;
 
-		const geometry = new THREE.ExtrudeGeometry( crossShape, extrudeSettings );
-		const cross = new THREE.Mesh( geometry, meshMaterial ) ;
-		cross.position.y=10.5;
-		cross.position.x=-1;
+		const boxGeometry = new THREE.CubeGeometry(2, 2, 1);
+		const topLeftBox = new THREE.Mesh( boxGeometry, meshMaterial ) ;
+		topLeftBox.position.y = crossYPosition + cutYDistance;
+		topLeftBox.position.x = crossXPosition - cutXDistance;
 
-		let crossBSP = new ThreeBSP(cross);
+		const topRightBox = new THREE.Mesh( boxGeometry, meshMaterial ) ;
+		topRightBox.position.y = crossYPosition + cutYDistance;
+		topRightBox.position.x = crossXPosition + cutXDistance;
+
+		const bottomLeftBox = new THREE.Mesh( boxGeometry, meshMaterial ) ;
+		bottomLeftBox.position.y = crossYPosition - cutYDistance;
+		bottomLeftBox.position.x = crossXPosition - cutXDistance;
+
+		const bottomRightBox = new THREE.Mesh( boxGeometry, meshMaterial ) ;
+		bottomRightBox.position.y = crossYPosition - cutYDistance;
+		bottomRightBox.position.x = crossXPosition + cutXDistance;
+
+		let crossBSP = new ThreeBSP(crossMesh);
+		let topLeftBSP = new ThreeBSP(topLeftBox);
+		let topRightBSP = new ThreeBSP(topRightBox);
+		let bottomLeftBSP = new ThreeBSP(bottomLeftBox);
+		let bottomRightBSP = new ThreeBSP(bottomRightBox);
+		crossBSP = crossBSP.subtract(topLeftBSP).subtract(topRightBSP).subtract(bottomLeftBSP).subtract(bottomRightBSP);
+
 		let meshBSP = new ThreeBSP(latheMesh);
 		let resultBSP = meshBSP.union(crossBSP);
 
