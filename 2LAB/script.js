@@ -31,7 +31,6 @@ $(function () {
 
 	var planeMaterial = new THREE.MeshLambertMaterial({
 		map: texture,
-		side: THREE.DoubleSide
 	});
 	const plane = new THREE.Mesh(planeGeometry, planeMaterial);
 	plane.receiveShadow = true;
@@ -125,12 +124,12 @@ $(function () {
 		const cutYDistance = 1.5;
 		const cutXDistance = 1.5;
 
-		const crossGeometry = new THREE.CubeGeometry(5, 5, 1);
+		const crossGeometry = new THREE.BoxGeometry(5, 5, 1);
 		const crossMesh = new THREE.Mesh(crossGeometry, meshMaterial);
 		crossMesh.position.y=crossYPosition;
 		crossMesh.position.x=crossXPosition;
 
-		const boxGeometry = new THREE.CubeGeometry(2, 2, 1);
+		const boxGeometry = new THREE.BoxGeometry(2, 2, 1);
 		const topLeftBox = new THREE.Mesh( boxGeometry, meshMaterial ) ;
 		topLeftBox.position.y = crossYPosition + cutYDistance;
 		topLeftBox.position.x = crossXPosition - cutXDistance;
