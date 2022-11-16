@@ -3,8 +3,7 @@ $(function () {
 	const stats = initStats();
 
 	//TODO kitos basic figuros is bloku,
-	// ambient and spot light (kugine),
-	// seseliai, blizgios medziagos
+	// blizgios medziagos
 	// interaktyvuis gui parametrai:
 	// pasirenkamas kugines sviesos tikslas (target), sviesos stiprumas
 
@@ -23,34 +22,19 @@ $(function () {
 
 	renderer.setClearColor(0xeeeeee, 1.0);
 	renderer.setSize(window.innerWidth, window.innerHeight);
-	// renderer.shadowMapEnabled = true;
+	renderer.shadowMap.enabled = true;
+	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 	// create the ground plane
 	const planeGeometry = new THREE.PlaneGeometry(180, 180);
 	const texture = new THREE.TextureLoader().load("textures/ChessBoardSvg.svg");
-	const textureMaterial = new THREE.MeshBasicMaterial({ map: texture });
 
-	// const shadowMaterial = new THREE.ShadowMaterial();
-	// // shadowMaterial.opacity = 0.2;
-	//
-	// const lambertMaterial = new THREE.MeshLambertMaterial({color: 0xffffff})
-	// lambertMaterial.shadowSide = THREE.FrontSide;
-	//
-	// const phongMaterial = new THREE.MeshPhongMaterial({
-	// 	// map: textureMaterial,
-	// 	side: THREE.DoubleSide, // important!
-	// 	alphaTest: 0.1,
-	// });
-	//
-	//
-	//
-	const plane = new THREE.Mesh(planeGeometry, textureMaterial);
-	// plane.receiveShadow = true;
-	// plane.customDepthMaterial = new THREE.MeshDepthMaterial({
-	// 	// map: texture,
-	// 	// depthPacking: THREE.RGBADepthPacking,
-	// 	alphaTest: 0.1
-	// })
+	var planeMaterial = new THREE.MeshLambertMaterial({
+		map: texture,
+		side: THREE.DoubleSide
+	});
+	const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+	plane.receiveShadow = true;
 
 	plane.rotation.x = -0.5 * Math.PI;
 	plane.position.x = 0;
@@ -59,13 +43,18 @@ $(function () {
 
 	scene.add(plane);
 
-	const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
-	directionalLight.position.set(-20, 40, 60);
-	scene.add(directionalLight);
+	// add spotlight for the shadows
+	var spotLight = new THREE.SpotLight(0xffffff, 1);
+	spotLight.position.set(-60, 100, 125);
+	spotLight.castShadow = true;
+	scene.add(spotLight);
 
-	// // add subtle ambient lighting
-	// const ambientLight = new THREE.AmbientLight(0x292929);
-	// scene.add(ambientLight);
+	const helper = new THREE.CameraHelper( spotLight.shadow.camera );
+	scene.add( helper );
+
+	// add subtle ambient lighting
+	const ambientLight = new THREE.AmbientLight(0x292929, 0.5);
+	scene.add(ambientLight);
 
 	// add the output of the renderer to the html element
 	$("#WebGL-output").append(renderer.domElement);
@@ -129,6 +118,7 @@ $(function () {
 		meshMaterial.side = THREE.DoubleSide;
 
 		const latheMesh = new THREE.Mesh(latheGeometry, meshMaterial);
+		latheMesh.castShadow = true;
 
 		const crossYPosition = 13;
 		const crossXPosition = 0;
@@ -190,6 +180,7 @@ $(function () {
 
 		const box = new THREE.Mesh(boxGeometry, boxMaterial);
 		box.castShadow = true;
+		box.receiveShadow = true;
 		return box;
 	}
 
@@ -203,7 +194,7 @@ $(function () {
 
 		const pawnColumns = 'ABCDEFGH'
 		let pawnRows = [2, 7];
-		let colors = [0xFFFFFF, 0x111111]
+		let colors = [0xFFFFFF, 0x4a4a4a]
 
 		for (let i = 0; i < pawnRows.length; i++) {
 			for (let j = 0; j < pawnColumns.length; j++) {
