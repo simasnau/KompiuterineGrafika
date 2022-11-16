@@ -27,7 +27,7 @@ $(function () {
 
 	// create the ground plane
 	const planeGeometry = new THREE.PlaneGeometry(180, 180);
-	const texture = THREE.ImageUtils.loadTexture("textures/ChessBoardSvg.svg");
+	const texture = new THREE.TextureLoader().load("textures/ChessBoardSvg.svg");
 	const textureMaterial = new THREE.MeshBasicMaterial({ map: texture });
 
 	// const shadowMaterial = new THREE.ShadowMaterial();
@@ -120,7 +120,7 @@ $(function () {
 		];
 		const points = [];
 		for (let i = 0; i < pointsX.length; i++) {
-			points.push(new THREE.Vector3(25-pointsX[i]/10, 0.01, (pointsY[pointsX.length - 1]-pointsY[i]-174)/10));
+			points.push(new THREE.Vector2(25-pointsX[i]/10, (pointsY[pointsX.length - 1]-pointsY[i]-174)/10));
 		}
 
 		const latheGeometry = new THREE.LatheGeometry(points, 12, 0, 2 * Math.PI);
@@ -129,7 +129,6 @@ $(function () {
 		meshMaterial.side = THREE.DoubleSide;
 
 		const latheMesh = new THREE.Mesh(latheGeometry, meshMaterial);
-		latheMesh.rotateX(-Math.PI / 2);
 
 		const crossYPosition = 13;
 		const crossXPosition = 0;
@@ -165,15 +164,19 @@ $(function () {
 		let bottomRightBSP = new ThreeBSP(bottomRightBox);
 		crossBSP = crossBSP.subtract(topLeftBSP).subtract(topRightBSP).subtract(bottomLeftBSP).subtract(bottomRightBSP);
 
-		let meshBSP = new ThreeBSP(latheMesh);
-		let resultBSP = meshBSP.union(crossBSP);
+		let cross = crossBSP.toMesh();
+		cross.geometry.computeFaceNormals();
+		cross.geometry.computeVertexNormals();
+		cross.material = meshMaterial;
 
-		let mesh = resultBSP.toMesh();
-		mesh.geometry.computeFaceNormals();
-		mesh.geometry.computeVertexNormals();
-		mesh.material=meshMaterial;
+		latheMesh.geometry.computeFaceNormals();
+		latheMesh.geometry.computeVertexNormals();
+		latheMesh.material = meshMaterial;
 
-		return mesh;
+		let kingGroup = new THREE.Group();
+		kingGroup.add(cross);
+		kingGroup.add(latheMesh);
+		return kingGroup;
 	}
 
 	function createPawnBox(color) {
@@ -182,7 +185,7 @@ $(function () {
 		const height = 20;
 		const depth = 10;
 
-		const boxGeometry = new THREE.CubeGeometry(width, height, depth);
+		const boxGeometry = new THREE.BoxGeometry(width, height, depth);
 		const boxMaterial = new THREE.MeshLambertMaterial({ color: color });
 
 		const box = new THREE.Mesh(boxGeometry, boxMaterial);
@@ -196,7 +199,7 @@ $(function () {
 	}
 
 	function populateBoard() {
-		const group = new THREE.Object3D();
+		const group = new THREE.Group();
 
 		const pawnColumns = 'ABCDEFGH'
 		let pawnRows = [2, 7];
@@ -206,7 +209,7 @@ $(function () {
 			for (let j = 0; j < pawnColumns.length; j++) {
 				let position = pawnColumns.charAt(j) + pawnRows[i];
 				const newFigure = createPawnBox(colors[i]);
-				moveChessPieceOnBoardWithHeight(newFigure, position, newFigure.geometry.height / 2);
+				moveChessPieceOnBoardWithHeight(newFigure, position, newFigure.geometry.parameters.height / 2);
 				group.add(newFigure)
 			}
 		}
@@ -228,7 +231,7 @@ $(function () {
 			for (let j = 0; j < rookColumns.length; j++) {
 				let position = rookColumns.charAt(j) + rows[i];
 				const newFigure = createPawnBox(colors[i]);
-				moveChessPieceOnBoardWithHeight(newFigure, position, newFigure.geometry.height / 2);
+				moveChessPieceOnBoardWithHeight(newFigure, position, newFigure.geometry.parameters.height / 2);
 				group.add(newFigure)
 			}
 		}
