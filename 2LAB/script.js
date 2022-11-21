@@ -22,7 +22,7 @@ $(function () {
 
 	// create the ground plane
 	const planeGeometry = new THREE.PlaneGeometry(180, 180);
-	const texture = new THREE.TextureLoader().load("textures/ChessBoardSvg.svg");
+	const texture = new THREE.TextureLoader().load("https://upload.wikimedia.org/wikipedia/commons/5/5b/Chess-board-with-letters_nevit_111.svg");
 
 	const planeMaterial = new THREE.MeshLambertMaterial({
 		map: texture,
