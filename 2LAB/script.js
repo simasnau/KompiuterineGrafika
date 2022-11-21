@@ -2,9 +2,6 @@
 $(function () {
 	const stats = initStats();
 
-	//TODO kitos basic figuros is bloku,
-	// blizgios medziagos
-
 	// create a scene, that will hold all our elements such as objects, cameras and lights.
 	const scene = new THREE.Scene();
 
@@ -119,7 +116,7 @@ $(function () {
 
 		const latheGeometry = new THREE.LatheGeometry(points, 12, 0, 2 * Math.PI);
 
-		const meshMaterial = new THREE.MeshLambertMaterial({color: color});
+		const meshMaterial = new THREE.MeshPhongMaterial({color: color, shininess: 100});
 		meshMaterial.side = THREE.DoubleSide;
 
 		const latheMesh = new THREE.Mesh(latheGeometry, meshMaterial);
@@ -175,23 +172,119 @@ $(function () {
 	}
 
 	function createPawnBox(color) {
-		// create box
-		const width = 10;
-		const height = 20;
-		const depth = 10;
+		const newFigure1 = createShinyBox(9, 3, 9, color);
+		newFigure1.position.y = 1.5;
+		const newFigure2 = createShinyBox(7, 5, 7, color);
+		newFigure2.position.y = 2.5;
+		const newFigure3 = createShinyBox(4, 9, 4, color);
+		newFigure3.position.y = 4.5;
+		const newFigure4 = createShinyBox(2, 12, 2, color);
+		newFigure4.position.y = 6;
+		const newFigure5 = createShinyBox(4, 3, 4, color);
+		newFigure5.position.y = 13.5;
 
-		const boxGeometry = new THREE.BoxGeometry(width, height, depth);
-		const boxMaterial = new THREE.MeshLambertMaterial({ color: color });
+		return mergeMeshes([newFigure1, newFigure2, newFigure3, newFigure4, newFigure5], color);
+	}
 
-		const box = new THREE.Mesh(boxGeometry, boxMaterial);
-		box.castShadow = true;
-		box.receiveShadow = true;
-		return box;
+	function createRook(color) {
+		const newFigure1 = createShinyBox(9, 3, 9, color);
+		newFigure1.position.y=1.5
+		const newFigure3 = createShinyBox(9, 3, 9, color);
+		newFigure3.position.y=1.5+6
+		const newFigure4 = createShinyBox(8, 12, 8, color);
+		newFigure4.position.y=6;
+		const newFigure5 = createShinyBox(7, 17, 7, color);
+		newFigure5.position.y=17/2;
+		const newFigure6 = createShinyBox(8, 3, 8, color);
+		newFigure6.position.y=1.5+17
+		return mergeMeshes([newFigure1, newFigure3, newFigure4, newFigure5, newFigure6], color);
+	}
+
+	function createKnight(color, i) {
+		const newFigure1 = createShinyBox(9, 3, 9, color);
+		newFigure1.position.y=newFigure1.geometry.parameters.height / 2
+		const newFigure3 = createShinyBox(9, 3, 9, color);
+		newFigure3.position.y=newFigure3.geometry.parameters.height / 2 + 6
+		const newFigure4 = createShinyBox(8, 12, 8, color);
+		newFigure4.position.y=newFigure4.geometry.parameters.height / 2
+		const newFigure5 = createShinyBox(7, 23, 7, color);
+		newFigure5.position.y=newFigure5.geometry.parameters.height / 2
+		const newFigure6 = createShinyBox(7, 6, 14, color);
+		newFigure6.position.y=23 - 5
+		newFigure6.position.z -= (2 * (-1)**(i % 2));
+
+		return mergeMeshes([newFigure1, newFigure3, newFigure4, newFigure5, newFigure6], color)
+	}
+
+	function createBishop(color) {
+		const newFigure1 = createShinyBox(9, 3, 9, color);
+		newFigure1.position.y=newFigure1.geometry.parameters.height / 2;
+		const newFigure2 = createShinyBox(7, 7, 7, color);
+		newFigure2.position.y=newFigure2.geometry.parameters.height / 2;
+		const newFigure3 = createShinyBox(4, 13, 4, color);
+		newFigure3.position.y=newFigure3.geometry.parameters.height / 2;
+		const newFigure4 = createShinyBox(3, 19, 3, color);
+		newFigure4.position.y=newFigure4.geometry.parameters.height / 2;
+		const newFigure5 = createShinyBox(4, 4, 4, color);
+		newFigure5.position.y=newFigure5.geometry.parameters.height / 2 + 19;
+		const newFigure6 = createShinyBox(2, 25, 2, color);
+		newFigure6.position.y=newFigure6.geometry.parameters.height / 2;
+		return mergeMeshes([newFigure1, newFigure2, newFigure3, newFigure4, newFigure5, newFigure6], color)
+	}
+
+	function createQueen(color) {
+		const newFigure1 = createShinyBox(9, 3, 9, color);
+		newFigure1.position.y=newFigure1.geometry.parameters.height / 2;
+		const newFigure2 = createShinyBox(8, 5, 8, color);
+		newFigure2.position.y=newFigure2.geometry.parameters.height / 2;
+		const newFigure3 = createShinyBox(9, 3, 9, color);
+		newFigure3.position.y=newFigure3.geometry.parameters.height / 2 + 5;
+		const newFigure4 = createShinyBox(8, 8, 8, color);
+		newFigure4.position.y=newFigure4.geometry.parameters.height / 2;
+		const newFigure5 = createShinyBox(5, 18, 5, color);
+		newFigure5.position.y=newFigure5.geometry.parameters.height / 2;
+		const newFigure6 = createShinyBox(4, 23, 4, color);
+		newFigure6.position.y=newFigure6.geometry.parameters.height / 2;
+		const newFigure7 = createShinyBox(7, 5, 7, color);
+		newFigure7.position.y=newFigure7.geometry.parameters.height / 2 + 23;
+		const newFigure8 = createShinyBox(6, 3, 6, color);
+		newFigure8.position.y=newFigure8.geometry.parameters.height / 2 + 28;
+
+		return mergeMeshes([newFigure1, newFigure2, newFigure3, newFigure4, newFigure5, newFigure6, newFigure7, newFigure8], color)
 	}
 
 	function moveChessPieceOnBoardWithHeight(chessPiece, positionString, y) {
 		moveChessPieceOnBoard(chessPiece, positionString)
 		chessPiece.position.y = y;
+	}
+
+	function mergeMeshes (meshArr, color) {
+		const geometry = new THREE.Geometry();
+
+		for (const mesh of meshArr) {
+			geometry.mergeMesh(mesh);
+		}
+		geometry.mergeVertices();
+
+
+		const meshResult = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color: color, shininess: 100}));
+		meshResult.castShadow = true;
+		meshResult.receiveShadow = true;
+		return meshResult;
+	}
+
+	function createMeshWithShadows(geometry, material) {
+		const mesh = new THREE.Mesh(geometry, material);
+		mesh.castShadow = true;
+		mesh.receiveShadow = true;
+		return mesh;
+	}
+
+	function createShinyBox(width, height, depth, color) {
+		const boxGeometry = new THREE.BoxGeometry(width, height, depth);
+		const boxMaterial = new THREE.MeshPhongMaterial({ color: color, shininess: 100 });
+
+		return createMeshWithShadows(boxGeometry, boxMaterial);
 	}
 
 	function populateBoard() {
@@ -205,14 +298,13 @@ $(function () {
 			for (let j = 0; j < pawnColumns.length; j++) {
 				let position = pawnColumns.charAt(j) + pawnRows[i];
 				const newFigure = createPawnBox(colors[i]);
-				moveChessPieceOnBoardWithHeight(newFigure, position, newFigure.geometry.parameters.height / 2);
+				moveChessPieceOnBoardWithHeight(newFigure, position, 0);
 				group.add(newFigure)
 			}
 		}
 
 		const kingColumns = 'E'
 		let rows = [1, 8];
-
 		for (let i = 0; i < rows.length; i++) {
 			for (let j = 0; j < kingColumns.length; j++) {
 				let position = kingColumns.charAt(j) + rows[i];
@@ -222,12 +314,42 @@ $(function () {
 			}
 		}
 
-		const rookColumns = 'ABCDFGH'
+		const rookColumns = 'AH'
 		for (let i = 0; i < rows.length; i++) {
 			for (let j = 0; j < rookColumns.length; j++) {
 				let position = rookColumns.charAt(j) + rows[i];
-				const newFigure = createPawnBox(colors[i]);
-				moveChessPieceOnBoardWithHeight(newFigure, position, newFigure.geometry.parameters.height / 2);
+				const newFigure = createRook(colors[i]);
+				moveChessPieceOnBoardWithHeight(newFigure, position, 0);
+				group.add(newFigure);
+			}
+		}
+
+		const knightColumns = 'BG'
+		for (let i = 0; i < rows.length; i++) {
+			for (let j = 0; j < knightColumns.length; j++) {
+				let position = knightColumns.charAt(j) + rows[i];
+				const newFigure = createKnight(colors[i], i);
+				moveChessPieceOnBoardWithHeight(newFigure, position, 0);
+				group.add(newFigure)
+			}
+		}
+
+		const bishopColumns = 'CF'
+		for (let i = 0; i < rows.length; i++) {
+			for (let j = 0; j < bishopColumns.length; j++) {
+				let position = bishopColumns.charAt(j) + rows[i];
+				const newFigure = createBishop(colors[i]);
+				moveChessPieceOnBoardWithHeight(newFigure, position, 0);
+				group.add(newFigure)
+			}
+		}
+
+		const queenColumns = 'D'
+		for (let i = 0; i < rows.length; i++) {
+			for (let j = 0; j < queenColumns.length; j++) {
+				let position = queenColumns.charAt(j) + rows[i];
+				const newFigure = createQueen(colors[i]);
+				moveChessPieceOnBoardWithHeight(newFigure, position, 0);
 				group.add(newFigure)
 			}
 		}
