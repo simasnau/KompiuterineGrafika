@@ -24,7 +24,7 @@ $(function () {
 	const planeGeometry = new THREE.PlaneGeometry(180, 180);
 	const texture = new THREE.TextureLoader().load("textures/ChessBoardSvg.svg");
 
-	var planeMaterial = new THREE.MeshLambertMaterial({
+	const planeMaterial = new THREE.MeshLambertMaterial({
 		map: texture,
 	});
 	const plane = new THREE.Mesh(planeGeometry, planeMaterial);
@@ -65,13 +65,13 @@ $(function () {
 	})();
 
 	const gui = new dat.GUI();
+	gui.add(controls, 'spin').onChange(function () {
+		spin = !spin;
+	});
 	gui.add(controls, "spotLightIntensity", 0, 2);
 	gui.add(controls, "spotLightTargetX", -100, 100);
 	gui.add(controls, "spotLightTargetY", -100, 100);
 	gui.add(controls, "spotLightTargetZ", -100, 100);
-	gui.add(controls, 'spin').onChange(function () {
-		spin = !spin;
-	});
 
 	const boardGroup = populateBoard();
 	scene.add(boardGroup);
@@ -174,62 +174,52 @@ $(function () {
 	function createPawnBox(color) {
 		const newFigure1 = createShinyBox(9, 3, 9, color);
 		newFigure1.position.y = 1.5;
-		const newFigure2 = createShinyBox(7, 5, 7, color);
-		newFigure2.position.y = 2.5;
-		const newFigure3 = createShinyBox(4, 9, 4, color);
-		newFigure3.position.y = 4.5;
-		const newFigure4 = createShinyBox(2, 12, 2, color);
-		newFigure4.position.y = 6;
-		const newFigure5 = createShinyBox(4, 3, 4, color);
-		newFigure5.position.y = 13.5;
+		const newFigure3 = createShinyBox(4, 12, 4, color);
+		newFigure3.position.y = 6;
+		const newFigure4 = createShinyBox(3, 15, 3, color);
+		newFigure4.position.y = 7.5;
+		const newFigure5 = createShinyBox(4, 4, 4, color);
+		newFigure5.position.y = 16.5;
 
-		return mergeMeshes([newFigure1, newFigure2, newFigure3, newFigure4, newFigure5], color);
+		return mergeMeshes([newFigure1, newFigure3, newFigure4, newFigure5], color);
 	}
 
 	function createRook(color) {
 		const newFigure1 = createShinyBox(9, 3, 9, color);
 		newFigure1.position.y=1.5
-		const newFigure3 = createShinyBox(9, 3, 9, color);
-		newFigure3.position.y=1.5+6
-		const newFigure4 = createShinyBox(8, 12, 8, color);
-		newFigure4.position.y=6;
-		const newFigure5 = createShinyBox(7, 17, 7, color);
-		newFigure5.position.y=17/2;
-		const newFigure6 = createShinyBox(8, 3, 8, color);
-		newFigure6.position.y=1.5+17
-		return mergeMeshes([newFigure1, newFigure3, newFigure4, newFigure5, newFigure6], color);
+		const newFigure4 = createShinyBox(7, 19, 7, color);
+		newFigure4.position.y=19/2;
+		const newFigure5 = createShinyBox(8, 3, 8, color);
+		newFigure5.position.y=1.5+19
+		return mergeMeshes([newFigure1, newFigure4, newFigure5], color);
 	}
 
 	function createKnight(color, i) {
 		const newFigure1 = createShinyBox(9, 3, 9, color);
 		newFigure1.position.y=newFigure1.geometry.parameters.height / 2
-		const newFigure3 = createShinyBox(9, 3, 9, color);
-		newFigure3.position.y=newFigure3.geometry.parameters.height / 2 + 6
-		const newFigure4 = createShinyBox(8, 12, 8, color);
+		const newFigure3 = createShinyBox(8, 12, 8, color);
+		newFigure3.position.y=newFigure3.geometry.parameters.height / 2
+		const newFigure4 = createShinyBox(7, 23, 7, color);
 		newFigure4.position.y=newFigure4.geometry.parameters.height / 2
-		const newFigure5 = createShinyBox(7, 23, 7, color);
-		newFigure5.position.y=newFigure5.geometry.parameters.height / 2
-		const newFigure6 = createShinyBox(7, 6, 14, color);
-		newFigure6.position.y=23 - 5
-		newFigure6.position.z -= (2 * (-1)**(i % 2));
+		const newFigure5 = createShinyBox(7, 6, 14, color);
+		newFigure5.position.y=23 - 5
+		newFigure5.position.z -= (2 * (-1)**(i % 2));
 
-		return mergeMeshes([newFigure1, newFigure3, newFigure4, newFigure5, newFigure6], color)
+		return mergeMeshes([newFigure1, newFigure3, newFigure4, newFigure5], color)
 	}
 
 	function createBishop(color) {
 		const newFigure1 = createShinyBox(9, 3, 9, color);
 		newFigure1.position.y=newFigure1.geometry.parameters.height / 2;
-		const newFigure2 = createShinyBox(7, 7, 7, color);
-		newFigure2.position.y=newFigure2.geometry.parameters.height / 2;
-		const newFigure3 = createShinyBox(4, 13, 4, color);
+		const newFigure3 = createShinyBox(6, 13, 6, color);
 		newFigure3.position.y=newFigure3.geometry.parameters.height / 2;
 		const newFigure4 = createShinyBox(3, 19, 3, color);
 		newFigure4.position.y=newFigure4.geometry.parameters.height / 2;
 		const newFigure5 = createShinyBox(4, 4, 4, color);
 		newFigure5.position.y=newFigure5.geometry.parameters.height / 2 + 19;
-		const newFigure6 = createShinyBox(2, 25, 2, color);
+		const newFigure6 = createShinyBox(2, 24, 2, color);
 		newFigure6.position.y=newFigure6.geometry.parameters.height / 2;
-		return mergeMeshes([newFigure1, newFigure2, newFigure3, newFigure4, newFigure5, newFigure6], color)
+		return mergeMeshes([newFigure1, newFigure3, newFigure4, newFigure5, newFigure6], color)
 	}
 
 	function createQueen(color) {
@@ -237,20 +227,14 @@ $(function () {
 		newFigure1.position.y=newFigure1.geometry.parameters.height / 2;
 		const newFigure2 = createShinyBox(8, 5, 8, color);
 		newFigure2.position.y=newFigure2.geometry.parameters.height / 2;
-		const newFigure3 = createShinyBox(9, 3, 9, color);
-		newFigure3.position.y=newFigure3.geometry.parameters.height / 2 + 5;
-		const newFigure4 = createShinyBox(8, 8, 8, color);
-		newFigure4.position.y=newFigure4.geometry.parameters.height / 2;
-		const newFigure5 = createShinyBox(5, 18, 5, color);
-		newFigure5.position.y=newFigure5.geometry.parameters.height / 2;
-		const newFigure6 = createShinyBox(4, 23, 4, color);
-		newFigure6.position.y=newFigure6.geometry.parameters.height / 2;
-		const newFigure7 = createShinyBox(7, 5, 7, color);
-		newFigure7.position.y=newFigure7.geometry.parameters.height / 2 + 23;
-		const newFigure8 = createShinyBox(6, 3, 6, color);
-		newFigure8.position.y=newFigure8.geometry.parameters.height / 2 + 28;
+		const newFigure3 = createShinyBox(6, 23, 6, color);
+		newFigure3.position.y=newFigure3.geometry.parameters.height / 2;
+		const newFigure4 = createShinyBox(7, 5, 7, color);
+		newFigure4.position.y=newFigure4.geometry.parameters.height / 2 + 23;
+		const newFigure5 = createShinyBox(6, 3, 6, color);
+		newFigure5.position.y=newFigure5.geometry.parameters.height / 2 + 28;
 
-		return mergeMeshes([newFigure1, newFigure2, newFigure3, newFigure4, newFigure5, newFigure6, newFigure7, newFigure8], color)
+		return mergeMeshes([newFigure1, newFigure2, newFigure3, newFigure4, newFigure5], color)
 	}
 
 	function moveChessPieceOnBoardWithHeight(chessPiece, positionString, y) {
@@ -409,10 +393,10 @@ $(function () {
 				zMultiplier = 6;
 				break;
 			case '7':
-				zMultiplier = 7;
+				zMultiplier = 6.9;
 				break;
 			case '8':
-				zMultiplier = 8;
+				zMultiplier = 7.9;
 				break;
 		}
 
