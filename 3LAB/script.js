@@ -3,16 +3,16 @@ $(function () {
 	const r = 5;
 	const R = 7.5;
 
-	var stats = initStats();
+	const stats = initStats();
 
 	// create a scene, that will hold all our elements such as objects, cameras and lights.
-	var scene = new THREE.Scene();
+	const scene = new THREE.Scene();
 
 	// create a camera, which defines where we're looking at.
-	var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 1000);
+	const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 1000);
 
 	// create a render and set the size
-	var webGLRenderer = new THREE.WebGLRenderer();
+	const webGLRenderer = new THREE.WebGLRenderer();
 	webGLRenderer.setSize(window.innerWidth, window.innerHeight);
 	webGLRenderer.shadowMapEnabled = true;
 
@@ -25,21 +25,18 @@ $(function () {
 	// add the output of the renderer to the html element
 	$("#WebGL-output").append(webGLRenderer.domElement);
 
-	var axes = new THREE.AxisHelper(50);
+	const axes = new THREE.AxisHelper(50);
 	scene.add(axes);
 
-	// call the render function
-	var step = 0;
-
 	// the points group
-	var spGroup;
+	let spGroup;
 	// the mesh
-	var hullMesh;
+	let hullMesh;
 
 	generatePoints();
 
 	// setup the control gui
-	var controls = new (function () {
+	const controls = new (function () {
 		// we need the first child, since it's a multimaterial
 
 		this.redraw = function () {
@@ -49,13 +46,12 @@ $(function () {
 		};
 	})();
 
-	var gui = new dat.GUI();
+	const gui = new dat.GUI();
 	gui.add(controls, "redraw");
 
-	// $("#WebGL-output").append(webGLRenderer.domElement);
-	var cameraControls = new THREE.TrackballControls(camera, webGLRenderer.domElement);
+	const cameraControls = new THREE.TrackballControls(camera, webGLRenderer.domElement);
 
-	newpoints = [];
+	let newpoints = [];
 	newpoints.push(new THREE.Vector3(1, 0, 0));
 	newpoints.push(new THREE.Vector3(0, 1, 0));
 	newpoints.push(new THREE.Vector3(-1, 0, 0));
@@ -63,24 +59,27 @@ $(function () {
 	newpoints.push(new THREE.Vector3(0, 0, 1));
 	newpoints.push(new THREE.Vector3(0, 0, -1));
 
-	var newgeo = new THREE.ConvexGeometry(newpoints);
-	var m = new THREE.Mesh(newgeo, material);
-	m.position.y = 25;
-	console.log(newgeo);
-	scene.add(m);
+	const newgeo = new THREE.ConvexGeometry(newpoints);
+	const geoMesh = new THREE.Mesh(newgeo, material);
+	geoMesh.position.y = 25;
+	scene.add(geoMesh);
 	render();
 
 	function generatePoints() {
-		var points = [];
-		var allPoints = [];
-		for (var i = 0; i < 5000; i++) {
-			var x = -15 + Math.random() * 30;
-			var y = -7.5 + Math.random() * 15;
-			var z = -15 + Math.random() * 30;
+		const points = [];
+		const allPoints = [];
+		let x2;
+		let y2;
+		let z2;
+		let R2;
+		let r2; // TODO gal perkelti i fora
+		for (let i = 0; i < 5000; i++) {
+			const x = -15 + Math.random() * 30;
+			const y = -7.5 + Math.random() * 15;
+			const z = -15 + Math.random() * 30;
 			x2 = Math.pow(x, 2);
 			y2 = Math.pow(y, 2);
 			z2 = Math.pow(z, 2);
-			// console.log(point.z, z2)
 			R2 = Math.pow(R, 2);
 			r2 = Math.pow(r, 2);
 			if (Math.pow(x2 + y2 + z2 + R2 - r2, 2) - 4 * R2 * (x2 + z2) <= 0) {
@@ -93,47 +92,43 @@ $(function () {
 		}
 
 		spGroup = new THREE.Object3D();
-		material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+		let material = new THREE.MeshBasicMaterial({color: 0xff0000});
 		points.forEach(function (point) {
-			var spGeom = new THREE.SphereGeometry(0.2);
-			var spMesh = new THREE.Mesh(spGeom, material);
+			const spGeom = new THREE.SphereGeometry(0.2);
+			const spMesh = new THREE.Mesh(spGeom, material);
 			spMesh.position = point;
-			// spGroup.add(spMesh);
+			// spGroup.add(spMesh); // parodo taskus viduje
 		});
 
 		//add all randomly generated points
 		material = new THREE.MeshBasicMaterial({ color: 0xd7d8cc });
 		allPoints.forEach(function (point) {
-			var spGeom = new THREE.SphereGeometry(0.2);
-			var spMesh = new THREE.Mesh(spGeom, material);
+			const spGeom = new THREE.SphereGeometry(0.2);
+			const spMesh = new THREE.Mesh(spGeom, material);
 			spMesh.position = point;
-			// spGroup.add(spMesh);
+			spGroup.add(spMesh); // parodo taskus
 		});
 		// add the points as a group to the scene
-		// spGroup.rotateX(Math.PI/2)
 		scene.add(spGroup);
 
 		// use the same points to create a convexgeometry
-		var hullGeometry = new THREE.ConvexGeometry(points);
+		const hullGeometry = new THREE.ConvexGeometry(points);
 		hullGeometry.uvsNeedUpdate = true;
 		hullMesh = createMesh(hullGeometry);
 
-		// hullMesh.rotateX(Math.PI/2)
 		scene.add(hullMesh);
 
-		var starimesh = createStair(true);
+		const stairMesh = createStair(true, material);
 
-		// starimesh.rotateY(90*Math.PI/180);
-		// starimesh.rotateZ(180*Math.PI/180);
-		starimesh.rotateZ((180 * Math.PI) / 180);
-		var multiply = new THREE.Vector3().multiply(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1));
-		starimesh.rotateOnAxis(multiply, (90 * Math.PI) / 180);
-		starimesh.position.y = 15;
-		scene.add(starimesh);
+		stairMesh.rotateZ((180 * Math.PI) / 180);
+		const multiply = new THREE.Vector3().multiply(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1));
+		stairMesh.rotateOnAxis(multiply, (90 * Math.PI) / 180);
+		stairMesh.position.y = 15;
+		scene.add(stairMesh);
 	}
 
-	function createStair(flipStair) {
-		var shape = new THREE.Shape();
+	function createStair(flipStair, material) {
+		const shape = new THREE.Shape();
 		shape.moveTo(0, 0);
 		shape.lineTo(0, 1);
 		shape.bezierCurveTo(0, 1, 2.5, 1, 3, 1.5);
@@ -169,43 +164,30 @@ $(function () {
 
 	function createMesh(geom) {
 		// assign two materials
-		var meshMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.2 });
+		const meshMaterial = new THREE.MeshBasicMaterial({color: 0x00ff00, transparent: true, opacity: 0.2});
 		meshMaterial.side = THREE.DoubleSide;
-		var wireFrameMat = new THREE.MeshBasicMaterial({ color: 0x1603d3 });
+		const wireFrameMat = new THREE.MeshBasicMaterial({color: 0x1603d3});
 		wireFrameMat.wireframe = true;
 
 		const texture = THREE.ImageUtils.loadTexture("textures/texture.jpg");
 		const textureMaterial = new THREE.MeshBasicMaterial({ map: texture });
 
-		console.log(geom);
-
-		console.log(geom.faceVertexUvs[0]);
-		vertices = geom.vertices;
-		console.log(vertices);
+		let vertices = geom.vertices;
 		geom.faceVertexUvs[0].forEach((vertexUvs, index) => {
 			geom.faceVertexUvs[0][index] = [];
-			// geom.faceVertexUvs[0][index].push(getUv(vertices, geom.faces[index].a ));
-			// geom.faceVertexUvs[0][index].push(getUv(vertices, geom.faces[index].b ));
-			// geom.faceVertexUvs[0][index].push(getUv(vertices, geom.faces[index].c ));
-			var a = getUv(vertices, geom.faces[index].a);
-			var b = getUv(vertices, geom.faces[index].b);
-			var c = getUv(vertices, geom.faces[index].c);
+			const a = getUv(vertices, geom.faces[index].a);
+			const b = getUv(vertices, geom.faces[index].b);
+			const c = getUv(vertices, geom.faces[index].c);
 
 			// pataisome siule
 			geom.faceVertexUvs[0][index] = fixUvs(a, b, c);
-			// geom.faceVertexUvs[0][index] = [a, b, c]
 		});
-		// console.log(geom.faceVertexUvs[0])
 
-		// create a multimaterial
-		var mesh = THREE.SceneUtils.createMultiMaterialObject(geom, [textureMaterial, wireFrameMat]);
-
-		return mesh;
+		return THREE.SceneUtils.createMultiMaterialObject(geom, [textureMaterial, wireFrameMat]);
 	}
 
 	function fixUvs(a, b, c) {
 		if (Math.abs(a.y - b.y) > 0.5 || Math.abs(b.y - c.y) > 0.5 || Math.abs(c.y - a.y) > 0.5) {
-			console.log("        a:" + a.y + " ,b:" + b.y + " ,c:" + c.y);
 			if (Math.abs(a.y - b.y) > 0.5 && Math.abs(c.y - a.y) > 0.5 && a.y < b.y && a.y < c.y) {
 				a.y += 1;
 			} else if (Math.abs(a.y - b.y) > 0.5 && Math.abs(c.y - a.y) > 0.5 && a.y > b.y && a.y > c.y) {
@@ -219,12 +201,9 @@ $(function () {
 			} else if (Math.abs(c.y - b.y) > 0.5 && Math.abs(c.y - a.y) > 0.5 && c.y > a.y && c.y > b.y) {
 				c.y -= 1;
 			} else {
-				console.log("        a:" + a.y + " ,b:" + b.y + " ,c:" + c.y);
-				var arr = fixUvs2(a, b, c);
-				console.log("kartojam");
+				const arr = fixUvs2(a, b, c);
 				return fixUvs(arr[0], arr[1], arr[2]);
 			}
-			console.log("edited - a :" + a.y + " ,b:" + b.y + " ,c:" + c.y);
 		}
 
 		return [a, b, c];
@@ -242,9 +221,9 @@ $(function () {
 	}
 
 	function getUv(vertices, pointIndex) {
-		point = vertices[pointIndex];
-		var u = Math.atan2(point.x, point.z) / (2 * Math.PI);
-		var v = Math.atan2(point.y, Math.sqrt(point.x * point.x + point.z * point.z) + R) / Math.PI + 0.5;
+		let point = vertices[pointIndex];
+		let u = Math.atan2(point.x, point.z) / (2 * Math.PI);
+		let v = Math.atan2(point.y, Math.sqrt(point.x * point.x + point.z * point.z) + R) / Math.PI + 0.5;
 		if (u < 0) {
 			u += 1;
 		}
@@ -263,9 +242,6 @@ $(function () {
 	function render() {
 		stats.update();
 
-		// spGroup.rotation.y = step;
-		// hullMesh.rotation.y = step += 0.01;
-
 		// render using requestAnimationFrame
 		requestAnimationFrame(render);
 		webGLRenderer.render(scene, camera);
@@ -273,7 +249,7 @@ $(function () {
 	}
 
 	function initStats() {
-		var stats = new Stats();
+		const stats = new Stats();
 		stats.setMode(0); // 0: fps, 1: ms
 
 		// Align top-left
