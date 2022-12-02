@@ -41,7 +41,7 @@ $(function () {
 	function generatePoints() {
 		const torusPoints = [];
 		const allPoints = [];
-		for (let i = 0; i < 5000; i++) {
+		for (let i = 0; i < 50000; i++) {
 			const x = -15 + Math.random() * 30;
 			const y = -7.5 + Math.random() * 15;
 			const z = -15 + Math.random() * 30;
