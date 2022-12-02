@@ -133,11 +133,11 @@ $(function () {
 
 	function fixUvs2(a, b, c) {
 		if (Math.abs(a.y - b.y) > 0.5) {
-			a.y > b.y ? (a.y > 0 ? (a.y -= 0.5) : (a.y += 0.5)) : b.y > 0 ? (b.y -= 0.5) : (b.y += 0.5);
+			a.y > b.y ? adjustUvY(a) : adjustUvY(b);
 		} else if (Math.abs(b.y - c.y) > 0.5) {
-			b.y > c.y ? (b.y > 0 ? (b.y -= 0.5) : (b.y += 0.5)) : c.y > 0 ? (c.y -= 0.5) : (c.y += 0.5);
+			b.y > c.y ? adjustUvY(b) : adjustUvY(c);
 		} else if (Math.abs(c.y - a.y) > 0.5) {
-			c.y > a.y ? (c.y > 0 ? (c.y -= 0.5) : (c.y += 0.5)) : a.y > 0 ? (a.y -= 0.5) : (a.y += 0.5);
+			c.y > a.y ? adjustUvY(c) : adjustUvY(a);
 		}
 		return [a, b, c];
 	}
