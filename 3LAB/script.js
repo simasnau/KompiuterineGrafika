@@ -36,98 +36,76 @@ $(function () {
 	generatePoints();
 
 	const cameraControls = new THREE.TrackballControls(camera, webGLRenderer.domElement);
-
-	let newpoints = [];
-	newpoints.push(new THREE.Vector3(1, 0, 0));
-	newpoints.push(new THREE.Vector3(0, 1, 0));
-	newpoints.push(new THREE.Vector3(-1, 0, 0));
-	newpoints.push(new THREE.Vector3(0, -1, 0));
-	newpoints.push(new THREE.Vector3(0, 0, 1));
-	newpoints.push(new THREE.Vector3(0, 0, -1));
-
-	let basicMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
-	const convexGeometry = new THREE.ConvexGeometry(newpoints);
-	const geoMesh = new THREE.Mesh(convexGeometry, basicMaterial);
-	geoMesh.position.y = 25;
-	scene.add(geoMesh);
 	render();
 
 	function generatePoints() {
-		const points = [];
+		const torusPoints = [];
 		const allPoints = [];
-		let x2;
-		let y2;
-		let z2;
-		let R2;
-		let r2; // TODO gal perkelti i fora
 		for (let i = 0; i < 5000; i++) {
 			const x = -15 + Math.random() * 30;
 			const y = -7.5 + Math.random() * 15;
 			const z = -15 + Math.random() * 30;
-			x2 = Math.pow(x, 2);
-			y2 = Math.pow(y, 2);
-			z2 = Math.pow(z, 2);
-			R2 = Math.pow(R, 2);
-			r2 = Math.pow(r, 2);
-			if (Math.pow(x2 + y2 + z2 + R2 - r2, 2) - 4 * R2 * (x2 + z2) <= 0) {
-				// points.push(new THREE.Vector3(x, y, z).applyAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI/2));
-				points.push(new THREE.Vector3(x, y, z));
+			let x2 = Math.pow(x, 2);
+			let y2 = Math.pow(y, 2);
+			let z2 = Math.pow(z, 2);
+			let R2 = Math.pow(R, 2);
+			let r2 = Math.pow(r, 2);
+
+			const torusCondition = Math.pow(x2 + y2 + z2 + R2 - r2, 2) - 4 * R2 * (x2 + z2) <= 0;
+
+			if (torusCondition) {
+				torusPoints.push(new THREE.Vector3(x, y, z));
 			} else {
-				// allPoints.push(new THREE.Vector3(x, y, z).applyAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI/2))
 				allPoints.push(new THREE.Vector3(x, y, z));
 			}
 		}
 
 		spGroup = new THREE.Object3D();
-		let material = new THREE.MeshBasicMaterial({color: 0xff0000});
-		points.forEach(function (point) {
-			const spGeom = new THREE.SphereGeometry(0.2);
-			const spMesh = new THREE.Mesh(spGeom, material);
-			spMesh.position = point;
-			// spGroup.add(spMesh); // parodo taskus viduje
+		torusPoints.forEach(function (point) {
+			addPointToSphereGroup(point, spGroup, 0xff0000)
 		});
 
-		//add all randomly generated points
-		material = new THREE.MeshBasicMaterial({ color: 0xd7d8cc });
 		allPoints.forEach(function (point) {
-			const spGeom = new THREE.SphereGeometry(0.2);
-			const spMesh = new THREE.Mesh(spGeom, material);
-			spMesh.position = point;
-			// spGroup.add(spMesh); // parodo taskus
+			addPointToSphereGroup(point, spGroup, 0xd7d8cc)
 		});
-		// add the points as a group to the scene
-		scene.add(spGroup);
+		// add the torusPoints as a group to the scene
+		// scene.add(spGroup);
 
-		// use the same points to create a convexgeometry
-		const hullGeometry = new THREE.ConvexGeometry(points);
+		// use the same torusPoints to create a convexgeometry
+		const hullGeometry = new THREE.ConvexGeometry(torusPoints);
 		hullGeometry.uvsNeedUpdate = true;
 		hullMesh = createMesh(hullGeometry);
 
 		scene.add(hullMesh);
 	}
 
-	function createMesh(geom) {
+	function addPointToSphereGroup(point, group, color) {
+		let material = new THREE.MeshBasicMaterial({color: color});
+		const spGeom = new THREE.SphereGeometry(0.2);
+		const spMesh = new THREE.Mesh(spGeom, material);
+		spMesh.position = point;
+		group.add(spMesh);
+	}
+
+	function createMesh(geometry) {
 		// assign two materials
-		const meshMaterial = new THREE.MeshBasicMaterial({color: 0x00ff00, transparent: true, opacity: 0.2});
-		meshMaterial.side = THREE.DoubleSide;
 		const wireFrameMat = new THREE.MeshBasicMaterial({color: 0x1603d3});
 		wireFrameMat.wireframe = true;
 
 		const texture = THREE.ImageUtils.loadTexture("textures/texture.jpg");
 		const textureMaterial = new THREE.MeshBasicMaterial({ map: texture });
 
-		let vertices = geom.vertices;
-		geom.faceVertexUvs[0].forEach((vertexUvs, index) => {
-			geom.faceVertexUvs[0][index] = [];
-			const a = getUv(vertices, geom.faces[index].a);
-			const b = getUv(vertices, geom.faces[index].b);
-			const c = getUv(vertices, geom.faces[index].c);
+		let vertices = geometry.vertices;
+		geometry.faceVertexUvs[0].forEach((_vertexUvs, index) => {
+			const a = getUv(vertices, geometry.faces[index].a);
+			const b = getUv(vertices, geometry.faces[index].b);
+			const c = getUv(vertices, geometry.faces[index].c);
 
 			// pataisome siule
-			geom.faceVertexUvs[0][index] = fixUvs(a, b, c);
+			geometry.faceVertexUvs[0][index] = fixUvs(a, b, c);
 		});
 
-		return THREE.SceneUtils.createMultiMaterialObject(geom, [textureMaterial, wireFrameMat]);
+		return THREE.SceneUtils.createMultiMaterialObject(geometry, [textureMaterial, wireFrameMat]);
 	}
 
 	function fixUvs(a, b, c) {
@@ -162,6 +140,14 @@ $(function () {
 			c.y > a.y ? (c.y > 0 ? (c.y -= 0.5) : (c.y += 0.5)) : a.y > 0 ? (a.y -= 0.5) : (a.y += 0.5);
 		}
 		return [a, b, c];
+	}
+
+	function adjustUvY(uvCoord) {
+		if (uvCoord.y > 0) {
+			uvCoord.y -= 0.5
+		} else {
+			uvCoord.y += 0.5
+		}
 	}
 
 	function getUv(vertices, pointIndex) {
