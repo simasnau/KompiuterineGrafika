@@ -35,20 +35,6 @@ $(function () {
 
 	generatePoints();
 
-	// setup the control gui
-	const controls = new (function () {
-		// we need the first child, since it's a multimaterial
-
-		this.redraw = function () {
-			scene.remove(spGroup);
-			scene.remove(hullMesh);
-			generatePoints();
-		};
-	})();
-
-	const gui = new dat.GUI();
-	gui.add(controls, "redraw");
-
 	const cameraControls = new THREE.TrackballControls(camera, webGLRenderer.domElement);
 
 	let newpoints = [];
@@ -59,8 +45,9 @@ $(function () {
 	newpoints.push(new THREE.Vector3(0, 0, 1));
 	newpoints.push(new THREE.Vector3(0, 0, -1));
 
-	const newgeo = new THREE.ConvexGeometry(newpoints);
-	const geoMesh = new THREE.Mesh(newgeo, material);
+	let basicMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
+	const convexGeometry = new THREE.ConvexGeometry(newpoints);
+	const geoMesh = new THREE.Mesh(convexGeometry, basicMaterial);
 	geoMesh.position.y = 25;
 	scene.add(geoMesh);
 	render();
@@ -106,7 +93,7 @@ $(function () {
 			const spGeom = new THREE.SphereGeometry(0.2);
 			const spMesh = new THREE.Mesh(spGeom, material);
 			spMesh.position = point;
-			spGroup.add(spMesh); // parodo taskus
+			// spGroup.add(spMesh); // parodo taskus
 		});
 		// add the points as a group to the scene
 		scene.add(spGroup);
@@ -117,49 +104,6 @@ $(function () {
 		hullMesh = createMesh(hullGeometry);
 
 		scene.add(hullMesh);
-
-		const stairMesh = createStair(true, material);
-
-		stairMesh.rotateZ((180 * Math.PI) / 180);
-		const multiply = new THREE.Vector3().multiply(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1));
-		stairMesh.rotateOnAxis(multiply, (90 * Math.PI) / 180);
-		stairMesh.position.y = 15;
-		scene.add(stairMesh);
-	}
-
-	function createStair(flipStair, material) {
-		const shape = new THREE.Shape();
-		shape.moveTo(0, 0);
-		shape.lineTo(0, 1);
-		shape.bezierCurveTo(0, 1, 2.5, 1, 3, 1.5);
-		shape.bezierCurveTo(3, 1.5, 3.5, 1.75, 6, 2);
-		shape.lineTo(6, 0);
-		shape.lineTo(0, 0);
-		const extrudeSettings = {
-			steps: 2,
-			depth: 0.3,
-			bevelEnabled: false,
-			bevelThickness: 1,
-			bevelSize: 1,
-			bevelOffset: 0,
-			bevelSegments: 1,
-		};
-
-		const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-		const mesh = new THREE.Mesh(geometry, material);
-
-		//TO CHANGE IF STAIR IS FLIPPED
-		if (flipStair) {
-			mesh.scale.x *= -1;
-		} else {
-			mesh.position.x = -1;
-		}
-
-		mesh.position.x = mesh.position.x + 1 / 2;
-		mesh.rotateX(Math.PI / 2);
-
-		mesh.scale.y *= -1;
-		return mesh;
 	}
 
 	function createMesh(geom) {
@@ -249,16 +193,16 @@ $(function () {
 	}
 
 	function initStats() {
-		const stats = new Stats();
-		stats.setMode(0); // 0: fps, 1: ms
+		const newStats = new Stats();
+		newStats.setMode(0); // 0: fps, 1: ms
 
 		// Align top-left
-		stats.domElement.style.position = "absolute";
-		stats.domElement.style.left = "0px";
-		stats.domElement.style.top = "0px";
+		newStats.domElement.style.position = "absolute";
+		newStats.domElement.style.left = "0px";
+		newStats.domElement.style.top = "0px";
 
-		$("#Stats-output").append(stats.domElement);
+		$("#Stats-output").append(newStats.domElement);
 
-		return stats;
+		return newStats;
 	}
 });
