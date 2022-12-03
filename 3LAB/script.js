@@ -89,8 +89,8 @@ $(function () {
 
 	function createMesh(geometry) {
 		// assign two materials
-		const wireFrameMat = new THREE.MeshBasicMaterial({color: 0x1603d3});
-		wireFrameMat.wireframe = true;
+		const wireFrameMat = new THREE.MeshBasicMaterial({ color: 0x1603d3 });
+		// wireFrameMat.wireframe = true;
 
 		const texture = THREE.ImageUtils.loadTexture("textures/texture.jpg");
 		const textureMaterial = new THREE.MeshBasicMaterial({ map: texture });
