@@ -16,7 +16,6 @@ camera.lookAt(scene.position);
 const renderer = new THREE.WebGLRenderer();
 renderer.setClearColor(0xeeeeee, 1.0);
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
 
 $("#WebGL-output").append(renderer.domElement);
 const orbitControls = new OrbitControls(camera, renderer.domElement);
@@ -31,11 +30,11 @@ const r = 5;
 const R = 7.5;
 const pointsCount = 10000;
 
-let generatedPoints = generatePoints(R, r, pointsCount);
+const generatedPoints = generatePoints(R, r, pointsCount);
 
-let filteredPoints = filterPoints(R, r, generatedPoints);
+const torusPoints = filterPoints(R, r, generatedPoints);
 
-const geometry = new ConvexGeometry(filteredPoints);
+const geometry = new ConvexGeometry(torusPoints);
 
 geometry.faceVertexUvs[0] = [];
 
@@ -71,7 +70,10 @@ texture.wrapS = THREE.RepeatWrapping;
 
 const material = new THREE.MeshBasicMaterial({ map: texture });
 
-const mesh = new THREE.Mesh(geometry, material);
+const wireFrameMaterial = new THREE.MeshBasicMaterial({ color: 0x969100 });
+wireFrameMaterial.wireframe = true;
+
+const mesh = createMultiMaterialObject(geometry, [material, wireFrameMaterial]);
 scene.add(mesh);
 
 render();
@@ -134,4 +136,12 @@ function initStats() {
 	$("#Stats-output").append(newStats.domElement);
 
 	return newStats;
+}
+
+function createMultiMaterialObject(geometry, materials) {
+	var group = new THREE.Group();
+	for (let i = 0; i < materials.length; i++) {
+		group.add(new THREE.Mesh(geometry, materials[i]));
+	}
+	return group;
 }
