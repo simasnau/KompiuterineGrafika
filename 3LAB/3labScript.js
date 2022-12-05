@@ -32,6 +32,12 @@ scene.add(ambientLight);
 const generatedPoints = generatePoints(R, r);
 const torusPoints = filterPoints(R, r, generatedPoints);
 
+// const pointsGroup = new THREE.Object3D();
+// generatedPoints.forEach(function (point) {
+// 	addPointToSphereGroup(point, pointsGroup, 0xff0000);
+// });
+// scene.add(pointsGroup);
+
 const geometry = new ConvexGeometry(torusPoints);
 
 const s = 4;
@@ -144,4 +150,12 @@ function createMultiMaterialObject(geometry, materials) {
 		group.add(new THREE.Mesh(geometry, materials[i]));
 	}
 	return group;
+}
+
+function addPointToSphereGroup(point, group, color) {
+	let material = new THREE.MeshBasicMaterial({ color: color });
+	const spGeom = new THREE.SphereGeometry(0.1);
+	const spMesh = new THREE.Mesh(spGeom, material);
+	spMesh.position.set(point.x, point.y, point.z);
+	group.add(spMesh);
 }
