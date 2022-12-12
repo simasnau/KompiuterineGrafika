@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+
+<html lang="en">
+	<head>
+		<title>4A Lab</title>
+		<script type="text/javascript" src="lib/three.js"></script>
+		<script type="text/javascript" src="lib/jquery-1.9.0.js"></script>
+		<script type="text/javascript" src="lib/stats.js"></script>
+		<script type="text/javascript" src="lib/dat.gui.js"></script>
+		<script type="text/javascript" src="lib/TrackballControls.js"></script>
+		<script type="text/javascript" src="lib/ThreeBSP.js"></script>
+		<style>
+			body {
+				/* set margin to 0 and overflow to hidden, to go fullscreen */
+				margin: 0;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="Stats-output"></div>
+		<!-- Div which will hold the Output -->
+		<div id="WebGL-output"></div>
+
+		<script type="text/javascript">
+			// once everything is loaded, we run our Three.js stuff.
+			$(function () {
+				const stats = initStats();
+
+				// create a scene, that will hold all our elements such as objects, cameras and lights.
+				const scene = new THREE.Scene();
+
+				// create a camera, which defines where we're looking at.
+				const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 500);
+				camera.position.x = 0;
+				camera.position.y = 100;
+				camera.position.z = 180;
+				camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+				const turningCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
+				turningCamera.position.x = 0;
+				turningCamera.position.y = 50;
+				turningCamera.position.z = 50;
+				turningCamera.lookAt(scene.position);
+
+				const dollyCamera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 200);
+				dollyCamera.position.x = 100;
+				dollyCamera.position.y = 20;
+				dollyCamera.position.z = -50;
+				dollyCamera.fov = 100;
+				dollyCamera.lookAt(scene.position);
+
+				const turningCameraHelper = new THREE.CameraHelper(turningCamera);
+				scene.add(turningCameraHelper);
+				const dollyCameraHelper = new THREE.CameraHelper(dollyCamera);
+				scene.add(dollyCameraHelper);
+
+				// create a render and set the size
+				const renderer = new THREE.WebGLRenderer();
+
+				renderer.setClearColor(0xeeeeee, 1.0);
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				renderer.shadowMap.enabled = true;
+				renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+				// create the ground plane
+				const planeGeometry = new THREE.PlaneGeometry(180, 180);
+				const texture = new THREE.TextureLoader().load(
+					"https://upload.wikimedia.org/wikipedia/commons/5/5b/Chess-board-with-letters_nevit_111.svg"
+				);
+
+				const planeMaterial = new THREE.MeshLambertMaterial({
+					map: texture,
+				});
+				const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+				plane.receiveShadow = true;
+
+				plane.rotation.x = -0.5 * Math.PI;
+				plane.position.x = 0;
+				plane.position.y = 0;
+				plane.position.z = 0;
+
+				scene.add(plane);
+
+				let overviewMode = true;
+				let perspectiveViewMode = false;
+				let dollyViewMode = false;
+				let zooming = true;
+				let cameraHelper1Off = false;
+				let cameraHelper2Off = false;
+
+				var directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+				directionalLight.position.set(-20, 40, 60);
+				scene.add(directionalLight);
+
+				// add subtle ambient lighting
+				var ambientLight = new THREE.AmbientLight(0x292929);
+				scene.add(ambientLight);
+
+				// add the output of the renderer to the html element
+				$("#WebGL-output").append(renderer.domElement);
+
+				var step = 0;
+
+				var fovDiff = (150 - 50) / 125;
+
+				const controls = new (function () {
+					this.cameraHelperPerspective = false;
+					this.cameraHelperDolly = false;
+					this.fov = 75;
+					this.perspective = "Overview";
+					this.dollyView = function () {
+						step = 0;
+						overviewMode = false;
+						perspectiveViewMode = false;
+						dollyViewMode = true;
+						this.perspective = "DOLLY";
+					};
+
+					this.perspectiveView = function () {
+						step = 0;
+						dollyViewMode = false;
+						overviewMode = false;
+						perspectiveViewMode = true;
+						this.perspective = "ROTATE";
+					};
+
+					this.overview = function () {
+						step = 0;
+						dollyViewMode = false;
+						perspectiveViewMode = false;
+						overviewMode = true;
+						this.perspective = "Overview";
+					};
+				})();
+
+				const gui = new dat.GUI();
+				gui.add(controls, "perspectiveView");
+				gui.add(controls, "dollyView");
+				gui.add(controls, "overview");
+				gui.add(controls, "cameraHelperPerspective").onChange(function (value) {
+					cameraHelper1Off = !cameraHelper1Off;
+				});
+				gui.add(controls, "cameraHelperDolly").onChange(function (value) {
+					cameraHelper2Off = !cameraHelper2Off;
+				});
+				gui.add(controls, "fov", 25, 100);
+				gui.add(controls, "perspective").listen();
+
+				const firstMesh = createChessFigureMesh(0x4a4a4a);
+				scene.add(firstMesh);
+
+				const secondMesh = createChessFigureMesh(0x4a4a4a);
+				secondMesh.position.set(0, 18, -50);
+
+				scene.add(secondMesh);
+
+				var turningCameraModel = createCameraMesh();
+				turningCameraModel.position.y = turningCamera.position.y;
+				turningCameraModel.position.z = turningCamera.position.z;
+				scene.add(turningCameraModel);
+
+				var dollyCameraModel = createCameraMesh();
+
+				dollyCameraModel.rotateY(-Math.PI / 2);
+				dollyCameraModel.position.x = dollyCamera.position.x - 10;
+				dollyCameraModel.position.y = dollyCamera.position.y;
+				dollyCameraModel.position.z = dollyCamera.position.z;
+				scene.add(dollyCameraModel);
+
+				const angleChange = 1 / (60 * 10);
+
+				const camControl = new THREE.TrackballControls(camera, renderer.domElement);
+				render();
+
+				function render() {
+					stats.update();
+
+					scene.add(dollyCameraModel);
+					scene.add(turningCameraModel);
+
+					turningCamera.fov = controls.fov;
+
+					x = 10 + 50 * Math.sin(step);
+					turningCamera.lookAt(new THREE.Vector3(x, 18, 50));
+					firstMesh.position.set(x, 18, 50);
+
+					step += 0.01;
+					camera.fov = controls.fov;
+					camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+					x = 10 + 50 * Math.sin(step);
+					turningCameraModel.lookAt(new THREE.Vector3(x, 18, 50));
+					if (firstMesh.position.x <= 30 && firstMesh.position.x >= -30) {
+						turningCameraModel.lookAt(firstMesh.position);
+						if (turningCameraModel.up.y > 0 && turningCameraModel.up.z < 1) {
+							turningCameraModel.up.y -= angleChange;
+							turningCameraModel.up.z += angleChange;
+						}
+					} else {
+						if (turningCameraModel.up.y < 1 && turningCameraModel.up.z > 0) {
+							turningCameraModel.up.y += angleChange;
+							turningCameraModel.up.z -= angleChange;
+						}
+					}
+
+					if (zooming) {
+						if (dollyCamera.position.x < 50) {
+							zooming = !zooming;
+						}
+						dollyCamera.position.x -= 0.5;
+					} else {
+						if (dollyCamera.position.x > 150) {
+							zooming = !zooming;
+						}
+						dollyCamera.position.x += 0.5;
+					}
+					dollyCameraModel.position.x = dollyCamera.position.x;
+					dollyCameraModel.position.y = dollyCamera.position.y;
+					dollyCameraModel.position.z = dollyCamera.position.z;
+					renderer.render(scene, camera);
+
+					if (firstMesh.position.x <= 30 && firstMesh.position.x >= -30) {
+						turningCamera.lookAt(firstMesh.position);
+						if (turningCamera.up.y > 0 && turningCamera.up.z < 1) {
+							turningCamera.up.y -= angleChange;
+							turningCamera.up.z += angleChange;
+						} else {
+							turningCamera.up = new THREE.Vector3(0, 0, 1);
+						}
+					} else {
+						if (turningCamera.up.y < 1 && turningCamera.up.z > 0) {
+							turningCamera.up.y += angleChange;
+							turningCamera.up.z -= angleChange;
+						} else {
+						}
+					}
+					if (cameraHelper1Off) {
+						scene.add(turningCameraHelper);
+						renderer.render(scene, turningCamera);
+					} else {
+						scene.remove(turningCameraHelper);
+					}
+
+					if (zooming) {
+						if (dollyCamera.position.x < 25) {
+							zooming = !zooming;
+						}
+						if (dollyCamera.fov < 150) {
+							dollyCamera.fov += fovDiff;
+						}
+						dollyCamera.position.x -= 0.5;
+					} else {
+						if (dollyCamera.position.x > 150) {
+							zooming = !zooming;
+						}
+						if (dollyCamera.fov > 10) {
+							dollyCamera.fov -= fovDiff;
+						}
+						dollyCamera.position.x += 0.5;
+					}
+
+					dollyCamera.lookAt(new THREE.Vector3(0, 18, -50));
+					if (cameraHelper2Off) {
+						scene.add(dollyCameraHelper);
+						renderer.render(scene, dollyCamera);
+					} else {
+						scene.remove(dollyCameraHelper);
+					}
+
+					camera.updateProjectionMatrix();
+					turningCamera.updateProjectionMatrix();
+					dollyCamera.updateProjectionMatrix();
+
+					dollyCameraHelper.update();
+					turningCameraHelper.update();
+
+					camControl.update();
+
+					requestAnimationFrame(render);
+					if (overviewMode) {
+						renderer.render(scene, camera);
+					}
+					if (perspectiveViewMode) {
+						scene.remove(turningCameraModel);
+						renderer.render(scene, turningCamera);
+					}
+					if (dollyViewMode) {
+						scene.remove(dollyCameraModel);
+						renderer.render(scene, dollyCamera);
+					}
+				}
+
+				function createChessFigureMesh(color) {
+					const pointsX = [
+						251, 202, 214, 225, 210, 200, 225, 225, 220, 215, 208, 205, 197, 186, 190, 169, 168, 172, 161, 160, 251,
+					];
+					const pointsY = [85, 97, 124, 145, 155, 175, 180, 205, 235, 265, 283, 295, 307, 316, 325, 334, 343, 352, 361, 370, 370];
+					const points = [];
+					for (let i = 0; i < pointsX.length; i++) {
+						points.push(new THREE.Vector2(25 - pointsX[i] / 10, (pointsY[pointsX.length - 1] - pointsY[i] - 174) / 10));
+					}
+
+					const latheGeometry = new THREE.LatheGeometry(points, 12, 0, 2 * Math.PI);
+
+					const meshMaterial = new THREE.MeshPhongMaterial({ color: color, shininess: 100 });
+					meshMaterial.side = THREE.DoubleSide;
+
+					const latheMesh = new THREE.Mesh(latheGeometry, meshMaterial);
+					latheMesh.castShadow = true;
+
+					const crossYPosition = 13;
+					const crossXPosition = 0;
+					const cutYDistance = 1.5;
+					const cutXDistance = 1.5;
+
+					const crossGeometry = new THREE.BoxGeometry(5, 5, 1);
+					const crossMesh = new THREE.Mesh(crossGeometry, meshMaterial);
+					crossMesh.position.y = crossYPosition;
+					crossMesh.position.x = crossXPosition;
+
+					const boxGeometry = new THREE.BoxGeometry(2, 2, 1);
+					const topLeftBox = new THREE.Mesh(boxGeometry, meshMaterial);
+					topLeftBox.position.y = crossYPosition + cutYDistance;
+					topLeftBox.position.x = crossXPosition - cutXDistance;
+
+					const topRightBox = new THREE.Mesh(boxGeometry, meshMaterial);
+					topRightBox.position.y = crossYPosition + cutYDistance;
+					topRightBox.position.x = crossXPosition + cutXDistance;
+
+					const bottomLeftBox = new THREE.Mesh(boxGeometry, meshMaterial);
+					bottomLeftBox.position.y = crossYPosition - cutYDistance;
+					bottomLeftBox.position.x = crossXPosition - cutXDistance;
+
+					const bottomRightBox = new THREE.Mesh(boxGeometry, meshMaterial);
+					bottomRightBox.position.y = crossYPosition - cutYDistance;
+					bottomRightBox.position.x = crossXPosition + cutXDistance;
+
+					let crossBSP = new ThreeBSP(crossMesh);
+					let topLeftBSP = new ThreeBSP(topLeftBox);
+					let topRightBSP = new ThreeBSP(topRightBox);
+					let bottomLeftBSP = new ThreeBSP(bottomLeftBox);
+					let bottomRightBSP = new ThreeBSP(bottomRightBox);
+					crossBSP = crossBSP.subtract(topLeftBSP).subtract(topRightBSP).subtract(bottomLeftBSP).subtract(bottomRightBSP);
+
+					let cross = crossBSP.toMesh();
+					cross.geometry.computeFaceNormals();
+					cross.geometry.computeVertexNormals();
+					cross.material = meshMaterial;
+
+					latheMesh.geometry.computeFaceNormals();
+					latheMesh.geometry.computeVertexNormals();
+					latheMesh.material = meshMaterial;
+
+					let kingGroup = new THREE.Group();
+					kingGroup.add(cross);
+					kingGroup.add(latheMesh);
+					return kingGroup;
+				}
+
+				function moveChessPieceOnBoardWithHeight(chessPiece, positionString, y) {
+					moveChessPieceOnBoard(chessPiece, positionString);
+					chessPiece.position.y = y;
+				}
+
+				function mergeMeshes(meshArr, color) {
+					const geometry = new THREE.Geometry();
+
+					for (const mesh of meshArr) {
+						geometry.mergeMesh(mesh);
+					}
+					geometry.mergeVertices();
+
+					const meshResult = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({ color: color, shininess: 100 }));
+					meshResult.castShadow = true;
+					meshResult.receiveShadow = true;
+					return meshResult;
+				}
+
+				function createMeshWithShadows(geometry, material) {
+					const mesh = new THREE.Mesh(geometry, material);
+					mesh.castShadow = true;
+					mesh.receiveShadow = true;
+					return mesh;
+				}
+
+				function createShinyBox(width, height, depth, color) {
+					const boxGeometry = new THREE.BoxGeometry(width, height, depth);
+					const boxMaterial = new THREE.MeshPhongMaterial({ color: color, shininess: 100 });
+
+					return createMeshWithShadows(boxGeometry, boxMaterial);
+				}
+
+				function createCameraMesh() {
+					const cameraMesh = new THREE.Object3D();
+					var rollGeometry = new THREE.CylinderGeometry(2, 2, 0.8, 32);
+					var frontGeometry = new THREE.CylinderGeometry(0.5, 0.1, 1.5, 32);
+					var bodyGeometry = new THREE.CubeGeometry(2.5, 2.5, 5);
+					var material = new THREE.MeshLambertMaterial({ color: 0xcccccc });
+					var roll = new THREE.Mesh(rollGeometry, material);
+					roll.rotation.z = Math.PI / 2;
+					roll.scale.x = roll.scale.x * 0.6;
+					roll.scale.y = roll.scale.y * 0.6;
+					roll.scale.z = roll.scale.z * 0.6;
+					roll.position.x = 0;
+					roll.position.y = 2;
+					roll.position.z = 1;
+					cameraMesh.add(roll);
+
+					var body = new THREE.Mesh(bodyGeometry, material);
+					cameraMesh.add(body);
+
+					var front = new THREE.Mesh(frontGeometry, material);
+					front.position.z = 2.5;
+					front.rotation.x = Math.PI / 2;
+					cameraMesh.add(front);
+
+					var roll2 = new THREE.Mesh(rollGeometry, material);
+					roll2.rotation.z = Math.PI / 2;
+					roll2.scale.x = roll2.scale.x * 0.6;
+					roll2.scale.y = roll2.scale.y * 0.6;
+					roll2.scale.z = roll2.scale.z * 0.6;
+					roll2.position.x = 0;
+					roll2.position.y = 2;
+					roll2.position.z = -1.25;
+					cameraMesh.add(roll2);
+
+					var axes = new THREE.AxesHelper(60);
+					cameraMesh.add(axes);
+
+					cameraMesh.position.y = 15;
+					cameraMesh.position.z = 15;
+
+					return cameraMesh;
+				}
+
+				function moveChessPieceOnBoard(chessPiece, positionString) {
+					if (positionString.length !== 2) {
+						throw new Error("Wrong length passed");
+					}
+					let x = -67;
+					let z = 64;
+					const gap = 19;
+
+					let xMultiplier = 1;
+					let zMultiplier = 1;
+
+					positionString = positionString.toUpperCase();
+					switch (positionString.charAt(0)) {
+						case "B":
+							xMultiplier = 2;
+							break;
+						case "C":
+							xMultiplier = 3;
+							break;
+						case "D":
+							xMultiplier = 4;
+							break;
+						case "E":
+							xMultiplier = 5;
+							break;
+						case "F":
+							xMultiplier = 6;
+							break;
+						case "G":
+							xMultiplier = 7;
+							break;
+						case "H":
+							xMultiplier = 8;
+							break;
+					}
+
+					switch (positionString.charAt(1)) {
+						case "2":
+							zMultiplier = 2;
+							break;
+						case "3":
+							zMultiplier = 3;
+							break;
+						case "4":
+							zMultiplier = 4;
+							break;
+						case "5":
+							zMultiplier = 5;
+							break;
+						case "6":
+							zMultiplier = 6;
+							break;
+						case "7":
+							zMultiplier = 6.9;
+							break;
+						case "8":
+							zMultiplier = 7.9;
+							break;
+					}
+
+					x = x + (xMultiplier - 1) * gap;
+					z = z - (zMultiplier - 1) * gap;
+
+					chessPiece.position.set(x, 18, z);
+				}
+
+				function initStats() {
+					const newStats = new Stats();
+
+					newStats.setMode(0);
+
+					newStats.domElement.style.position = "absolute";
+					newStats.domElement.style.left = "0px";
+					newStats.domElement.style.top = "0px";
+
+					$("#Stats-output").append(newStats.domElement);
+
+					return newStats;
+				}
+			});
+		</script>
+	</body>
+</html>
