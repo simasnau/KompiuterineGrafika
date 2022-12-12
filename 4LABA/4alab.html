@@ -89,20 +89,20 @@
 				let cameraHelper1Off = false;
 				let cameraHelper2Off = false;
 
-				var directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+				const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
 				directionalLight.position.set(-20, 40, 60);
 				scene.add(directionalLight);
 
 				// add subtle ambient lighting
-				var ambientLight = new THREE.AmbientLight(0x292929);
+				const ambientLight = new THREE.AmbientLight(0x292929);
 				scene.add(ambientLight);
 
 				// add the output of the renderer to the html element
 				$("#WebGL-output").append(renderer.domElement);
 
-				var step = 0;
+				let step = 0;
 
-				var fovDiff = (150 - 50) / 125;
+				const fovDiff = 100 / 125;
 
 				const controls = new (function () {
 					this.cameraHelperPerspective = false;
@@ -155,12 +155,12 @@
 
 				scene.add(secondMesh);
 
-				var turningCameraModel = createCameraMesh();
+				const turningCameraModel = createCameraMesh();
 				turningCameraModel.position.y = turningCamera.position.y;
 				turningCameraModel.position.z = turningCamera.position.z;
 				scene.add(turningCameraModel);
 
-				var dollyCameraModel = createCameraMesh();
+				const dollyCameraModel = createCameraMesh();
 
 				dollyCameraModel.rotateY(-Math.PI / 2);
 				dollyCameraModel.position.x = dollyCamera.position.x - 10;
@@ -181,7 +181,7 @@
 
 					turningCamera.fov = controls.fov;
 
-					x = 10 + 50 * Math.sin(step);
+					let x = 10 + 50 * Math.sin(step);
 					turningCamera.lookAt(new THREE.Vector3(x, 18, 50));
 					firstMesh.position.set(x, 18, 50);
 
@@ -358,46 +358,13 @@
 					return kingGroup;
 				}
 
-				function moveChessPieceOnBoardWithHeight(chessPiece, positionString, y) {
-					moveChessPieceOnBoard(chessPiece, positionString);
-					chessPiece.position.y = y;
-				}
-
-				function mergeMeshes(meshArr, color) {
-					const geometry = new THREE.Geometry();
-
-					for (const mesh of meshArr) {
-						geometry.mergeMesh(mesh);
-					}
-					geometry.mergeVertices();
-
-					const meshResult = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({ color: color, shininess: 100 }));
-					meshResult.castShadow = true;
-					meshResult.receiveShadow = true;
-					return meshResult;
-				}
-
-				function createMeshWithShadows(geometry, material) {
-					const mesh = new THREE.Mesh(geometry, material);
-					mesh.castShadow = true;
-					mesh.receiveShadow = true;
-					return mesh;
-				}
-
-				function createShinyBox(width, height, depth, color) {
-					const boxGeometry = new THREE.BoxGeometry(width, height, depth);
-					const boxMaterial = new THREE.MeshPhongMaterial({ color: color, shininess: 100 });
-
-					return createMeshWithShadows(boxGeometry, boxMaterial);
-				}
-
 				function createCameraMesh() {
 					const cameraMesh = new THREE.Object3D();
-					var rollGeometry = new THREE.CylinderGeometry(2, 2, 0.8, 32);
-					var frontGeometry = new THREE.CylinderGeometry(0.5, 0.1, 1.5, 32);
-					var bodyGeometry = new THREE.CubeGeometry(2.5, 2.5, 5);
-					var material = new THREE.MeshLambertMaterial({ color: 0xcccccc });
-					var roll = new THREE.Mesh(rollGeometry, material);
+					const rollGeometry = new THREE.CylinderGeometry(2, 2, 0.8, 32);
+					const frontGeometry = new THREE.CylinderGeometry(0.5, 0.1, 1.5, 32);
+					const bodyGeometry = new THREE.CubeGeometry(2.5, 2.5, 5);
+					const material = new THREE.MeshLambertMaterial({ color: 0xcccccc });
+					const roll = new THREE.Mesh(rollGeometry, material);
 					roll.rotation.z = Math.PI / 2;
 					roll.scale.x = roll.scale.x * 0.6;
 					roll.scale.y = roll.scale.y * 0.6;
@@ -407,15 +374,15 @@
 					roll.position.z = 1;
 					cameraMesh.add(roll);
 
-					var body = new THREE.Mesh(bodyGeometry, material);
+					const body = new THREE.Mesh(bodyGeometry, material);
 					cameraMesh.add(body);
 
-					var front = new THREE.Mesh(frontGeometry, material);
+					const front = new THREE.Mesh(frontGeometry, material);
 					front.position.z = 2.5;
 					front.rotation.x = Math.PI / 2;
 					cameraMesh.add(front);
 
-					var roll2 = new THREE.Mesh(rollGeometry, material);
+					const roll2 = new THREE.Mesh(rollGeometry, material);
 					roll2.rotation.z = Math.PI / 2;
 					roll2.scale.x = roll2.scale.x * 0.6;
 					roll2.scale.y = roll2.scale.y * 0.6;
@@ -425,79 +392,13 @@
 					roll2.position.z = -1.25;
 					cameraMesh.add(roll2);
 
-					var axes = new THREE.AxesHelper(60);
+					const axes = new THREE.AxesHelper(60);
 					cameraMesh.add(axes);
 
 					cameraMesh.position.y = 15;
 					cameraMesh.position.z = 15;
 
 					return cameraMesh;
-				}
-
-				function moveChessPieceOnBoard(chessPiece, positionString) {
-					if (positionString.length !== 2) {
-						throw new Error("Wrong length passed");
-					}
-					let x = -67;
-					let z = 64;
-					const gap = 19;
-
-					let xMultiplier = 1;
-					let zMultiplier = 1;
-
-					positionString = positionString.toUpperCase();
-					switch (positionString.charAt(0)) {
-						case "B":
-							xMultiplier = 2;
-							break;
-						case "C":
-							xMultiplier = 3;
-							break;
-						case "D":
-							xMultiplier = 4;
-							break;
-						case "E":
-							xMultiplier = 5;
-							break;
-						case "F":
-							xMultiplier = 6;
-							break;
-						case "G":
-							xMultiplier = 7;
-							break;
-						case "H":
-							xMultiplier = 8;
-							break;
-					}
-
-					switch (positionString.charAt(1)) {
-						case "2":
-							zMultiplier = 2;
-							break;
-						case "3":
-							zMultiplier = 3;
-							break;
-						case "4":
-							zMultiplier = 4;
-							break;
-						case "5":
-							zMultiplier = 5;
-							break;
-						case "6":
-							zMultiplier = 6;
-							break;
-						case "7":
-							zMultiplier = 6.9;
-							break;
-						case "8":
-							zMultiplier = 7.9;
-							break;
-					}
-
-					x = x + (xMultiplier - 1) * gap;
-					z = z - (zMultiplier - 1) * gap;
-
-					chessPiece.position.set(x, 18, z);
 				}
 
 				function initStats() {
