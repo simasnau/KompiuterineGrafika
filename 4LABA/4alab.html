@@ -40,13 +40,13 @@
 				const turningCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
 				turningCamera.position.x = 0;
 				turningCamera.position.y = 50;
-				turningCamera.position.z = 50;
+				turningCamera.position.z = 64;
 				turningCamera.lookAt(scene.position);
 
 				const dollyCamera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 200);
 				dollyCamera.position.x = 100;
 				dollyCamera.position.y = 20;
-				dollyCamera.position.z = -50;
+				dollyCamera.position.z = -30;
 				dollyCamera.fov = 100;
 				dollyCamera.lookAt(scene.position);
 
@@ -102,19 +102,17 @@
 
 				let step = 0;
 
-				const fovDiff = 100 / 125;
+				const fovDiff = 0.8;
 
 				const controls = new (function () {
 					this.cameraHelperPerspective = false;
 					this.cameraHelperDolly = false;
 					this.fov = 75;
-					this.perspective = "Overview";
 					this.dollyView = function () {
 						step = 0;
 						overviewMode = false;
 						perspectiveViewMode = false;
 						dollyViewMode = true;
-						this.perspective = "DOLLY";
 					};
 
 					this.perspectiveView = function () {
@@ -122,7 +120,6 @@
 						dollyViewMode = false;
 						overviewMode = false;
 						perspectiveViewMode = true;
-						this.perspective = "ROTATE";
 					};
 
 					this.overview = function () {
@@ -130,7 +127,6 @@
 						dollyViewMode = false;
 						perspectiveViewMode = false;
 						overviewMode = true;
-						this.perspective = "Overview";
 					};
 				})();
 
@@ -145,15 +141,15 @@
 					cameraHelper2Off = !cameraHelper2Off;
 				});
 				gui.add(controls, "fov", 25, 100);
-				gui.add(controls, "perspective").listen();
 
 				const firstMesh = createChessFigureMesh(0x4a4a4a);
 				scene.add(firstMesh);
 
 				const secondMesh = createChessFigureMesh(0x4a4a4a);
-				secondMesh.position.set(0, 18, -50);
+				secondMesh.position.set(0, 18, -30);
 
 				scene.add(secondMesh);
+				dollyCamera.lookAt(secondMesh.position);
 
 				const turningCameraModel = createCameraMesh();
 				turningCameraModel.position.y = turningCamera.position.y;
@@ -168,7 +164,7 @@
 				dollyCameraModel.position.z = dollyCamera.position.z;
 				scene.add(dollyCameraModel);
 
-				const angleChange = 1 / (60 * 10);
+				const angleChange = 2 / (60 * 10);
 
 				const camControl = new THREE.TrackballControls(camera, renderer.domElement);
 				render();
@@ -181,60 +177,44 @@
 
 					turningCamera.fov = controls.fov;
 
-					let x = 10 + 50 * Math.sin(step);
-					turningCamera.lookAt(new THREE.Vector3(x, 18, 50));
-					firstMesh.position.set(x, 18, 50);
+					let x = 66 * Math.sin(step);
+					firstMesh.position.set(x, 18, 64);
+					turningCamera.lookAt(firstMesh.position);
+					turningCameraModel.lookAt(firstMesh.position);
 
 					step += 0.01;
 					camera.fov = controls.fov;
-					camera.lookAt(new THREE.Vector3(0, 0, 0));
-
-					x = 10 + 50 * Math.sin(step);
-					turningCameraModel.lookAt(new THREE.Vector3(x, 18, 50));
-					if (firstMesh.position.x <= 30 && firstMesh.position.x >= -30) {
-						turningCameraModel.lookAt(firstMesh.position);
-						if (turningCameraModel.up.y > 0 && turningCameraModel.up.z < 1) {
-							turningCameraModel.up.y -= angleChange;
-							turningCameraModel.up.z += angleChange;
-						}
-					} else {
-						if (turningCameraModel.up.y < 1 && turningCameraModel.up.z > 0) {
-							turningCameraModel.up.y += angleChange;
-							turningCameraModel.up.z -= angleChange;
-						}
-					}
 
 					if (zooming) {
 						if (dollyCamera.position.x < 50) {
-							zooming = !zooming;
+							zooming = false;
 						}
-						dollyCamera.position.x -= 0.5;
+						dollyCamera.position.x -= 1;
 					} else {
 						if (dollyCamera.position.x > 150) {
-							zooming = !zooming;
+							zooming = true;
 						}
-						dollyCamera.position.x += 0.5;
+						dollyCamera.position.x += 1;
 					}
 					dollyCameraModel.position.x = dollyCamera.position.x;
 					dollyCameraModel.position.y = dollyCamera.position.y;
 					dollyCameraModel.position.z = dollyCamera.position.z;
-					renderer.render(scene, camera);
 
-					if (firstMesh.position.x <= 30 && firstMesh.position.x >= -30) {
-						turningCamera.lookAt(firstMesh.position);
-						if (turningCamera.up.y > 0 && turningCamera.up.z < 1) {
-							turningCamera.up.y -= angleChange;
-							turningCamera.up.z += angleChange;
-						} else {
-							turningCamera.up = new THREE.Vector3(0, 0, 1);
+					if (zooming) {
+						if (dollyCamera.fov < 150) {
+							dollyCamera.fov += fovDiff;
 						}
 					} else {
-						if (turningCamera.up.y < 1 && turningCamera.up.z > 0) {
-							turningCamera.up.y += angleChange;
-							turningCamera.up.z -= angleChange;
-						} else {
+						if (dollyCamera.fov > 10) {
+							dollyCamera.fov -= fovDiff;
 						}
 					}
+
+					renderer.render(scene, camera);
+
+					moveTurningCamera(firstMesh, turningCameraModel);
+					moveTurningCamera(firstMesh, turningCamera);
+
 					if (cameraHelper1Off) {
 						scene.add(turningCameraHelper);
 						renderer.render(scene, turningCamera);
@@ -242,25 +222,6 @@
 						scene.remove(turningCameraHelper);
 					}
 
-					if (zooming) {
-						if (dollyCamera.position.x < 25) {
-							zooming = !zooming;
-						}
-						if (dollyCamera.fov < 150) {
-							dollyCamera.fov += fovDiff;
-						}
-						dollyCamera.position.x -= 0.5;
-					} else {
-						if (dollyCamera.position.x > 150) {
-							zooming = !zooming;
-						}
-						if (dollyCamera.fov > 10) {
-							dollyCamera.fov -= fovDiff;
-						}
-						dollyCamera.position.x += 0.5;
-					}
-
-					dollyCamera.lookAt(new THREE.Vector3(0, 18, -50));
 					if (cameraHelper2Off) {
 						scene.add(dollyCameraHelper);
 						renderer.render(scene, dollyCamera);
@@ -288,6 +249,20 @@
 					if (dollyViewMode) {
 						scene.remove(dollyCameraModel);
 						renderer.render(scene, dollyCamera);
+					}
+				}
+
+				function moveTurningCamera(mesh, cameraObject) {
+					if (mesh.position.x <= 20 && mesh.position.x >= -20) {
+						if (cameraObject.up.y > 0 && cameraObject.up.z < 1) {
+							cameraObject.up.y -= angleChange;
+							cameraObject.up.z += angleChange;
+						}
+					} else {
+						if (cameraObject.up.y < 1 && cameraObject.up.z > 0) {
+							cameraObject.up.y += angleChange;
+							cameraObject.up.z -= angleChange;
+						}
 					}
 				}
 
