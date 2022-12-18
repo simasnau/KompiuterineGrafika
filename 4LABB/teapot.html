@@ -28,7 +28,7 @@
 	varying vec3 vPosInCamera;
 	varying vec3 vNormal;
 	varying vec2 vUv;
-	uniform float uDirX, uDirY, uShininess;
+	uniform float uDirX, uDirY, uDirZ, uShininess;
 
 	void main(void) {
 		vUv = uv;
@@ -50,7 +50,7 @@
 	varying vec3 vPosInCamera;
 	varying vec3 vNormal;
 	varying vec2 vUv;
-	uniform float uDirX, uDirY, uShininess, shininess;
+	uniform float uDirX, uDirY, uDirZ, uShininess, shininess;
     #extension GL_OES_standard_derivatives : enable
 
 	void main() {
@@ -60,7 +60,7 @@
         vec4 spec = vec4(0.0);
 
 
-		vec3 lightDir = normalize(vec3(uDirX,uDirY,0.1));
+		vec3 lightDir = normalize(vec3(uDirX,uDirY,uDirZ));
 		float diffLightWeight = max(dot(lightDir, normalize(vNormal)), 0.0);
         vec3 eyeDir = normalize(-vPosInCamera);
         vec3 reflDir = -reflect(lightDir, vNormal);
@@ -175,7 +175,7 @@
 	varying vec3 vPosInCamera;
 	varying vec3 vNormal;
 	varying vec2 vUv;
-	uniform float uDirX, uDirY, uShininess;
+	uniform float uDirX, uDirY, uDirZ, uShininess;
     #extension GL_OES_standard_derivatives : enable
 
 	void main() {
@@ -186,7 +186,7 @@
       	vec3 diffColor = vec3(0.6,0.6,0.6);
 		vec3 specColor = vec3(0.4,0.4,0.3);
 
-		vec3 lightDir = normalize(vec3(uDirX,uDirY,1.0));
+		vec3 lightDir = normalize(vec3(uDirX,uDirY,uDirZ));
 		float diffLightWeight = max(dot(nNormal,lightDir),0.0);
         vec3 eyeDir = normalize(-vPosInCamera);
         vec3 reflDir = -reflect(lightDir, nNormal);
@@ -317,6 +317,7 @@
             uniforms: {
                 uDirX: {type: 'f', value: 0.0},
                 uDirY: {type: 'f', value: 0.0},
+                uDirZ: {type: 'f', value: 0.0},
                 uShininess: {type: 'f', value: 30.0},
                 uScale: {type: 'f', value: 8.0},
                 uEdge: {type: 'f', value: 0.0},
@@ -338,6 +339,7 @@
             uniforms: {
                 uDirX: {type: 'f', value: 0.0},
                 uDirY: {type: 'f', value: 0.0},
+                uDirZ: {type: 'f', value: 0.0},
                 uShininess: {type: 'f', value: 30.0},
                 uScale: {type: 'f', value: 8.0},
                 uEdge: {type: 'f', value: 0.0}
@@ -355,6 +357,7 @@
         control = new function () {
             this.dirX = 0.5;
             this.dirY = 0.0;
+            this.dirZ = 1.0;
             this.shin = 30.0;
             this.scale = 6.0;
             this.edge = 0.0;
@@ -362,6 +365,7 @@
         const gui = new dat.GUI();
         gui.add(control, 'dirX', -1.0, 1.0, 0.5);
         gui.add(control, 'dirY', -1.0, 1.0, 0.0);
+        gui.add(control, 'dirZ', -1.0, 2.0, 1.0);
         gui.add(control, 'scale', 1.0, 10.0);
         gui.add(control, 'edge', 0.0, 10.0);
 
@@ -375,12 +379,14 @@
         function render() {
             teapotMaterial.uniforms.uDirX.value = control.dirX;
             teapotMaterial.uniforms.uDirY.value = control.dirY;
+            teapotMaterial.uniforms.uDirZ.value = control.dirZ;
             teapotMaterial.uniforms.uShininess.value = control.shin;
             teapotMaterial.uniforms.uScale.value = control.scale;
             teapotMaterial.uniforms.uEdge.value = control.edge;
 
             teapotMaterialPlane.uniforms.uDirX.value = control.dirX;
             teapotMaterialPlane.uniforms.uDirY.value = control.dirY;
+            teapotMaterialPlane.uniforms.uDirZ.value = control.dirZ;
             teapotMaterialPlane.uniforms.uScale.value = control.scale;
             teapotMaterialPlane.uniforms.uEdge.value = control.edge;
 
