@@ -1,13 +1,10 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
 
 <head>
     <title></title>
     <script type="text/javascript" src="lib/three.js"></script>
-    <script type="text/javascript" src="lib/jquery-1.9.0.js"></script>
-    <script type="text/javascript" src="lib/stats.js"></script>
-    <script type="text/javascript" src="lib/ConvexGeometry.js"></script>
     <script type="text/javascript" src="lib/dat.gui.js"></script>
     <script type="text/javascript" src="lib/TrackballControls.js"></script>
     <script type="text/javascript" src="lib/uclass_TeapotGeometry.js"></script>
@@ -291,8 +288,7 @@
 
 <script type="text/javascript" id="mainCode">
 
-    var
-        control,
+    let control,
         container,
         renderer,
         scene,
@@ -317,7 +313,7 @@
 
         scene.add(camera);
 
-        teapotMaterial = new THREE.ShaderMaterial({
+        const teapotMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 uDirX: {type: 'f', value: 0.0},
                 uDirY: {type: 'f', value: 0.0},
@@ -327,20 +323,18 @@
                 redColor: {type: 'f', value: 0.4},
                 greenColor: {type: 'f', value: 0.4},
                 blueColor: {type: 'f', value: 0.3},
-                // shininess: {type: 'f', value: 0.5}
             },
             vertexShader: document.getElementById('teapotVertexShader').textContent,
             fragmentShader: document.getElementById('teapotFragmentShader').textContent
         });
 
-        var teapotSize = 15;
-        var segments = 20;
-        geo = new THREE.TeapotGeometry(teapotSize, segments, true, true, true, true, true);
-        console.log("Teapot geometry", geo)
-        mesh = new THREE.Mesh(geo, teapotMaterial);
-        scene.add(mesh);
+        const teapotSize = 15;
+        const segments = 20;
+        let teapotGeometry = new THREE.TeapotGeometry(teapotSize, segments, true, true, true, true, true);
+        let teapotMesh = new THREE.Mesh(teapotGeometry, teapotMaterial);
+        scene.add(teapotMesh);
 
-        teapotMaterialPlane = new THREE.ShaderMaterial({
+        const teapotMaterialPlane = new THREE.ShaderMaterial({
             uniforms: {
                 uDirX: {type: 'f', value: 0.0},
                 uDirY: {type: 'f', value: 0.0},
@@ -352,14 +346,11 @@
             fragmentShader: document.getElementById('teapotFragmentShaderPlane').textContent
         });
 
-        var geo = new THREE.PlaneGeometry(30, 30, 20, 20);
-        mesh = new THREE.Mesh(geo, teapotMaterialPlane);
+        const planeGeometry = new THREE.PlaneGeometry(30, 30, 20, 20);
+        mesh = new THREE.Mesh(planeGeometry, teapotMaterialPlane);
         mesh.position.x = 50;
         scene.add(mesh);
 
-
-        var axes = new THREE.AxisHelper(20);
-        scene.add(axes);
 
         control = new function () {
             this.dirX = 0.5;
@@ -367,53 +358,38 @@
             this.shin = 30.0;
             this.scale = 6.0;
             this.edge = 0.0;
-            this.redColor = 0.4;
-            this.greenColor = 0.4;
-            this.blueColor = 0.3;
-            // this.shininess = 0.5;
         }
-        var gui = new dat.GUI();
+        const gui = new dat.GUI();
         gui.add(control, 'dirX', -1.0, 1.0, 0.5);
         gui.add(control, 'dirY', -1.0, 1.0, 0.0);
-        gui.add(control, 'shin', 1.0, 60.0, 30.0);
         gui.add(control, 'scale', 1.0, 10.0);
         gui.add(control, 'edge', 0.0, 10.0);
-        gui.add(control, 'redColor', 0.0, 1.0);
-        gui.add(control, 'greenColor', 0.0, 1.0);
-        gui.add(control, 'blueColor', 0.0, 1.0);
-        // gui.add(control, 'shininess', 0.0, 1.0);
 
         renderer = new THREE.WebGLRenderer({antialias: true});
         renderer.setSize(window.innerWidth, window.innerHeight);
 
         container.appendChild(renderer.domElement);
-        controls = new THREE.TrackballControls(camera, renderer.domElement);
+        const controls = new THREE.TrackballControls(camera, renderer.domElement);
         render();
 
+        function render() {
+            teapotMaterial.uniforms.uDirX.value = control.dirX;
+            teapotMaterial.uniforms.uDirY.value = control.dirY;
+            teapotMaterial.uniforms.uShininess.value = control.shin;
+            teapotMaterial.uniforms.uScale.value = control.scale;
+            teapotMaterial.uniforms.uEdge.value = control.edge;
+
+            teapotMaterialPlane.uniforms.uDirX.value = control.dirX;
+            teapotMaterialPlane.uniforms.uDirY.value = control.dirY;
+            teapotMaterialPlane.uniforms.uScale.value = control.scale;
+            teapotMaterialPlane.uniforms.uEdge.value = control.edge;
+
+            // render
+            renderer.render(scene, camera);
+            requestAnimationFrame(render);
+            controls.update();
+        }
     });
-
-    function render() {
-        teapotMaterial.uniforms.uDirX.value = control.dirX;
-        teapotMaterial.uniforms.uDirY.value = control.dirY;
-        teapotMaterial.uniforms.uShininess.value = control.shin;
-        teapotMaterial.uniforms.uScale.value = control.scale;
-        teapotMaterial.uniforms.uEdge.value = control.edge;
-        teapotMaterial.uniforms.redColor.value = control.redColor;
-        teapotMaterial.uniforms.greenColor.value = control.greenColor;
-        teapotMaterial.uniforms.blueColor.value = control.blueColor;
-        // teapotMaterial.uniforms.shininess.value = control.shininess;
-
-        teapotMaterialPlane.uniforms.uDirX.value = control.dirX;
-        teapotMaterialPlane.uniforms.uDirY.value = control.dirY;
-        teapotMaterialPlane.uniforms.uShininess.value = control.shin;
-        teapotMaterialPlane.uniforms.uScale.value = control.scale;
-        teapotMaterialPlane.uniforms.uEdge.value = control.edge;
-
-        // render
-        renderer.render(scene, camera);
-        requestAnimationFrame(render);
-        controls.update();
-    }
 
 </script>
 
