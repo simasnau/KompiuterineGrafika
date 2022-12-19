@@ -164,8 +164,6 @@
 				dollyCameraModel.position.z = dollyCamera.position.z;
 				scene.add(dollyCameraModel);
 
-				const angleChange = 2 / (60 * 10);
-
 				const camControl = new THREE.TrackballControls(camera, renderer.domElement);
 				render();
 
@@ -191,7 +189,7 @@
 						}
 						dollyCamera.position.x -= 1;
 					} else {
-						if (dollyCamera.position.x > 150) {
+						if (dollyCamera.position.x > 120) {
 							zooming = true;
 						}
 						dollyCamera.position.x += 1;
@@ -253,6 +251,8 @@
 				}
 
 				function moveTurningCamera(mesh, cameraObject) {
+					const angleChange = 2 / (60 * 10);
+
 					if (mesh.position.x <= 20 && mesh.position.x >= -20) {
 						if (cameraObject.up.y > 0 && cameraObject.up.z < 1) {
 							cameraObject.up.y -= angleChange;
@@ -260,8 +260,8 @@
 						}
 					} else {
 						if (cameraObject.up.y < 1 && cameraObject.up.z > 0) {
-							cameraObject.up.y += angleChange;
-							cameraObject.up.z -= angleChange;
+							cameraObject.up.y += angleChange * 2;
+							cameraObject.up.z -= angleChange * 2;
 						}
 					}
 				}
