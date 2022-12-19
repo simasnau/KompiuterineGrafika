@@ -37,6 +37,7 @@
 	    vPosInCamera = (viewMatrix * modelMatrix * vec4(position, 1.0 )).xyz;
     	gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0 );
 	}
+
 </script>
 
 <script type="x-shader/x-vertex" id="teapotFragmentShader">
@@ -44,21 +45,30 @@
 
 	uniform float uScale;
 	uniform float uEdge;
-	uniform float redColor, greenColor, blueColor;
 
 	varying vec3 vPosition;
 	varying vec3 vPosInCamera;
 	varying vec3 vNormal;
 	varying vec2 vUv;
-	uniform float uDirX, uDirY, uDirZ, uShininess, shininess;
+	uniform float uDirX, uDirY, uDirZ, uShininess;
     #extension GL_OES_standard_derivatives : enable
+
+    vec3 smoothColor(float f, float uEdge, vec3 firstColor, vec3 secondColor) {
+        float grad = length(vec2(dFdx(f),dFdy(f)));
+        float d = uEdge*grad;
+        float edgeFactor = smoothstep(-d, d, f);
+        return mix(firstColor, secondColor, edgeFactor);
+   }
+
+    float circle(float u, float v) {
+        return u*u + v*v - 0.25*0.25;
+    }
 
 	void main() {
 		vec3 ambColor = vec3(0.1,0.1,0.1);
-      	vec3 diffColor = vec3(0.6+redColor*0.4,0.6+greenColor*0.4,0.6+blueColor*0.4);
-		vec3 specColor = vec3(redColor,greenColor,blueColor);
+        vec3 diffColor = vec3(0.6,0.6,0.6);
+        vec3 specColor = vec3(0.4,0.4,0.3);
         vec4 spec = vec4(0.0);
-
 
 		vec3 lightDir = normalize(vec3(uDirX,uDirY,uDirZ));
 		float diffLightWeight = max(dot(lightDir, normalize(vNormal)), 0.0);
@@ -71,97 +81,70 @@
 
     vec3 blue = vec3(0.0,0.0,0.9);
     vec3 yellow = vec3(1,1,0);
+    vec3 magenta = vec3(1,0,1);
+    vec3 cyan = vec3(0,1,1);
 
     float u = fract(vUv.x * uScale);
     float v = fract(vUv.y * uScale);
     float f = u*(u-0.5)*(u-1.0)*v*(v-0.5)*(v-1.0);
-    float grad = length(vec2(dFdx(f),dFdy(f)));
-    float d = uEdge*grad;
-    float edgeFactor = smoothstep(-d, d, f);
-    vec3 finalColor = mix(yellow,blue,edgeFactor);
+    vec3 finalColor = smoothColor(f, uEdge, magenta,blue);
 
-    u = fract(vUv.x * uScale)-0.5;
-    v = fract(vUv.y * uScale)-0.5;
-    if(u >= v) f = (u - 0.5) * u * (u-1.0);
-    else f = v * (v-0.5) * (v-1.0);
-    grad = length(vec2(dFdx(f),dFdy(f)));
-    d = uEdge*grad;
-    edgeFactor = smoothstep(-d, d, f);
-    finalColor = mix(blue, finalColor, edgeFactor);
-
+    float downFunction = v + u - 1.0;
+    float upFunction = -u + v;
     // right bottom blue outter circle
-    u = fract(vUv.x * uScale)-0.5;
-    v = fract(vUv.y * uScale)-1.0;
-    if(v>0.5 || u<0.5){f = -u * -(u*0.5)*-(u-1.0);}
-    grad = length(vec2(dFdx(f),dFdy(f)));
-    d = uEdge*grad;
-    edgeFactor = smoothstep(-d, d, f);
-    finalColor = mix(yellow, finalColor, edgeFactor);
+    if (v>0.5 && u>0.5) {
+        finalColor = smoothColor(upFunction, uEdge, magenta, finalColor);
+    } else if (v<0.5 && u <0.5) {
+        finalColor = smoothColor(-upFunction, uEdge, magenta, finalColor);
+    }
+    else if (v>0.5 && u<0.5) {
+        finalColor = smoothColor(downFunction, uEdge, blue, finalColor);
+    }
+     else {
+        finalColor = smoothColor(-downFunction, uEdge, blue, finalColor);
+    }
 
+   //middle circle
     u = fract(vUv.x * uScale)-0.5;
     v = fract(vUv.y * uScale)-0.5;
-    if(v<0.5 && u>0.0) {f = -v*-(v-0.5)*-(v-1.0);}
-    grad = length(vec2(dFdx(f),dFdy(f)));
-    d = uEdge*grad;
-    edgeFactor = smoothstep(-d, d, f);
-    finalColor = mix(blue, finalColor, edgeFactor);
+    if (u>0.0 && v>u) {
+        finalColor = smoothColor(circle(u, v), uEdge, cyan, finalColor);
+    } else if ((v<0.0 && u>0.0 && u>-v)) {
+        finalColor = smoothColor(circle(u, v), uEdge, cyan, finalColor);
+    } else if ((v<0.0 && u<0.0 && v<u)) {
+        finalColor = smoothColor(circle(u, v), uEdge, cyan, finalColor);
+    } else if ((u<0.0 && v>0.0 && -u>v)) {
+        finalColor = smoothColor(circle(u, v), uEdge, cyan, finalColor);
+    } else {
+        finalColor = smoothColor(circle(u, v), uEdge, yellow, finalColor);
+    }
 
-    u = fract(vUv.x * uScale);
-    v = fract(vUv.y * uScale);
-    f = -u+0.5 + v ;
-    grad = length(vec2(dFdx(f),dFdy(f)));
-    d = uEdge*grad;
-    edgeFactor = smoothstep(-d, d, f);
-    finalColor = mix(blue, finalColor, edgeFactor);
+    // bottom left circle
+    u = fract(vUv.x * uScale)-0.25;
+    v = fract(vUv.y * uScale)-0.25;
 
-    u = fract(vUv.x * uScale)-0.5;
-    v = fract(vUv.y * uScale);
-    f = u*u + v*v - 0.25;
-    grad = length(vec2(dFdx(f),dFdy(f)));
-    d = uEdge*grad;
-    edgeFactor = smoothstep(-d, d, f);
-    if(v>0.0&&v<0.5) finalColor = mix(yellow, finalColor, edgeFactor);
+    float centerCircle = circle(u-0.25, v-0.25);
+    if (v<u) {
+        if (centerCircle < 0.0) {
+            finalColor = smoothColor(circle(u, v), uEdge, blue, finalColor);
+        } else {
+            finalColor = smoothColor(circle(u, v), uEdge, cyan, finalColor);
+        }
+    } else {
+        if (centerCircle < 0.0) {
+            finalColor = smoothColor(circle(u, v), uEdge, magenta, finalColor);
+        } else {
+            finalColor = smoothColor(circle(u, v), uEdge, yellow, finalColor);
+        }
+    }
 
-    // bottom right big circle blue part
-    u = fract(vUv.x * uScale)-0.5;
-    v = fract(vUv.y * uScale);
-    f = u*u + v*v - 0.25;
-    grad = length(vec2(dFdx(f),dFdy(f)));
-    d = uEdge*grad;
-    edgeFactor = smoothstep(-d, d, f);
-    if(v>u && v>0.0 && v<0.5 && u>0.0){finalColor = mix(blue, finalColor, edgeFactor);}
-
-    // top small circle both sides depending on u
-    u = fract(vUv.x * uScale)-0.5;
-    v = fract(vUv.y * uScale)-0.75;
-    f = u*u + v*v - 0.015;
-    grad = length(vec2(dFdx(f),dFdy(f)));
-    d = uEdge*grad;
-    edgeFactor = smoothstep(-d, d, f);
-    if(u > 0.001){finalColor = mix(yellow, finalColor, edgeFactor);}
-    //} else {finalColor = mix(blue, finalColor, edgeFactor);}
-
-    // top small circle both sides depending on u
-    u = fract(vUv.x * uScale)-0.5;
-    v = fract(vUv.y * uScale)-0.75;
-    f = u*u + v*v - 0.015;
-    grad = length(vec2(dFdx(f),dFdy(f)));
-    d = uEdge*grad;
-    edgeFactor = smoothstep(-d, d, f);
-    if(u < 0.0001){finalColor = mix(blue, finalColor, edgeFactor);}
-
-    gl_FragColor = vec4(finalColor, 1.0);
-
-    if(vPosition.y >= -1.5 && vPosition.y<3.0
-        && vPosition.x <18.15 && vPosition.x >-18.15) {
-    gl_FragColor = vec4(finalColor + color, 1.0);
+    if(vPosition.y >= -1.5 && vPosition.y<4.0 && vPosition.x <18.15 && vPosition.x >-18.15) {
+        gl_FragColor = vec4(finalColor + color, 1.0);
     }
     else {
         gl_FragColor = vec4(color, 1.0);
     }
-	}
-
-
+}
 
 </script>
 
@@ -177,6 +160,17 @@
 	varying vec2 vUv;
 	uniform float uDirX, uDirY, uDirZ, uShininess;
     #extension GL_OES_standard_derivatives : enable
+
+   vec3 smoothColor(float f, float uEdge, vec3 firstColor, vec3 secondColor) {
+       float grad = length(vec2(dFdx(f),dFdy(f)));
+       float d = uEdge*grad;
+       float edgeFactor = smoothstep(-d, d, f);
+       return mix(firstColor, secondColor, edgeFactor);
+   }
+
+    float circle(float u, float v) {
+        return u*u + v*v - 0.25*0.25;
+    }
 
 	void main() {
 
@@ -197,93 +191,67 @@
 
     vec3 blue = vec3(0.0,0.0,0.9);
     vec3 yellow = vec3(1,1,0);
+    vec3 magenta = vec3(1,0,1);
+    vec3 cyan = vec3(0,1,1);
 
     float u = fract(vUv.x * uScale);
     float v = fract(vUv.y * uScale);
     float f = u*(u-0.5)*(u-1.0)*v*(v-0.5)*(v-1.0);
-    float grad = length(vec2(dFdx(f),dFdy(f)));
-    float d = uEdge*grad;
-    float edgeFactor = smoothstep(-d, d, f);
-    vec3 finalColor = mix(yellow,blue,edgeFactor);
+    vec3 finalColor = smoothColor(f, uEdge, magenta,blue);
 
-    u = fract(vUv.x * uScale)-0.5;
-    v = fract(vUv.y * uScale)-0.5;
-    if(u >= v) f = (u - 0.5) * u * (u-1.0);
-    else f = v * (v-0.5) * (v-1.0);
-    grad = length(vec2(dFdx(f),dFdy(f)));
-    d = uEdge*grad;
-    edgeFactor = smoothstep(-d, d, f);
-    finalColor = mix(blue, finalColor, edgeFactor);
 
+    float downFunction = v + u - 1.0;
+    float upFunction = -u + v;
     // right bottom blue outter circle
-    u = fract(vUv.x * uScale)-0.5;
-    v = fract(vUv.y * uScale)-1.0;
-    if(v>0.5 || u<0.5){f = -u * -(u*0.5)*-(u-1.0);}
-    grad = length(vec2(dFdx(f),dFdy(f)));
-    d = uEdge*grad;
-    edgeFactor = smoothstep(-d, d, f);
-    finalColor = mix(yellow, finalColor, edgeFactor);
+    if (v>0.5 && u>0.5) {
+        finalColor = smoothColor(upFunction, uEdge, magenta, finalColor);
+    } else if (v<0.5 && u <0.5) {
+        finalColor = smoothColor(-upFunction, uEdge, magenta, finalColor);
+    }
+    else if (v>0.5 && u<0.5) {
+        finalColor = smoothColor(downFunction, uEdge, blue, finalColor);
+    }
+     else {
+        finalColor = smoothColor(-downFunction, uEdge, blue, finalColor);
+    }
 
+    //middle circle
     u = fract(vUv.x * uScale)-0.5;
     v = fract(vUv.y * uScale)-0.5;
-    if(v<0.5 && u>0.0) {f = -v*-(v-0.5)*-(v-1.0);}
-    grad = length(vec2(dFdx(f),dFdy(f)));
-    d = uEdge*grad;
-    edgeFactor = smoothstep(-d, d, f);
-    finalColor = mix(blue, finalColor, edgeFactor);
+    if (u>0.0 && v>u) {
+        finalColor = smoothColor(circle(u, v), uEdge, cyan, finalColor);
+    } else if ((v<0.0 && u>0.0 && u>-v)) {
+        finalColor = smoothColor(circle(u, v), uEdge, cyan, finalColor);
+    } else if ((v<0.0 && u<0.0 && v<u)) {
+        finalColor = smoothColor(circle(u, v), uEdge, cyan, finalColor);
+    } else if ((u<0.0 && v>0.0 && -u>v)) {
+        finalColor = smoothColor(circle(u, v), uEdge, cyan, finalColor);
+    } else {
+        finalColor = smoothColor(circle(u, v), uEdge, yellow, finalColor);
+    }
 
-    u = fract(vUv.x * uScale);
-    v = fract(vUv.y * uScale);
-    f = -u+0.5 + v ;
-    grad = length(vec2(dFdx(f),dFdy(f)));
-    d = uEdge*grad;
-    edgeFactor = smoothstep(-d, d, f);
-    finalColor = mix(blue, finalColor, edgeFactor);
+    // bottom left circle
+    u = fract(vUv.x * uScale)-0.25;
+    v = fract(vUv.y * uScale)-0.25;
 
-    //bottom big yellow circle
-    u = fract(vUv.x * uScale)-0.5;
-    v = fract(vUv.y * uScale);
-    f = u*u + v*v - 0.25;
-    grad = length(vec2(dFdx(f),dFdy(f)));
-    d = uEdge*grad;
-    edgeFactor = smoothstep(-d, d, f);
-    if(v>0.0&&v<0.5) finalColor = mix(yellow, finalColor, edgeFactor);
-
-    // bottom right big circle blue part
-    u = fract(vUv.x * uScale)-0.5;
-    v = fract(vUv.y * uScale);
-    f = u*u + v*v - 0.25;
-    grad = length(vec2(dFdx(f),dFdy(f)));
-    d = uEdge*grad;
-    edgeFactor = smoothstep(-d, d, f);
-    if(v>u && v>0.0 && v<0.5 && u>0.0){finalColor = mix(blue, finalColor, edgeFactor);}
-
-
-    // top small circle both sides depending on u
-    u = fract(vUv.x * uScale)-0.5;
-    v = fract(vUv.y * uScale)-0.75;
-    f = u*u + v*v - 0.015;
-    grad = length(vec2(dFdx(f),dFdy(f)));
-    d = uEdge*grad;
-    edgeFactor = smoothstep(-d, d, f);
-    if(u > 0.001){finalColor = mix(yellow, finalColor, edgeFactor);}
-    //} else {finalColor = mix(blue, finalColor, edgeFactor);}
-
-    // top small circle both sides depending on u
-    u = fract(vUv.x * uScale)-0.5;
-    v = fract(vUv.y * uScale)-0.75;
-    f = u*u + v*v - 0.015;
-    grad = length(vec2(dFdx(f),dFdy(f)));
-    d = uEdge*grad;
-    edgeFactor = smoothstep(-d, d, f);
-    if(u < 0.0001){finalColor = mix(blue, finalColor, edgeFactor);}
+    float centerCircle = circle(u-0.25, v-0.25);
+    if (v<u) {
+        if (centerCircle < 0.0) {
+            finalColor = smoothColor(circle(u, v), uEdge, blue, finalColor);
+        } else {
+            finalColor = smoothColor(circle(u, v), uEdge, cyan, finalColor);
+        }
+    } else {
+        if (centerCircle < 0.0) {
+            finalColor = smoothColor(circle(u, v), uEdge, magenta, finalColor);
+        } else {
+            finalColor = smoothColor(circle(u, v), uEdge, yellow, finalColor);
+        }
+    }
 
     gl_FragColor = vec4(finalColor, 1.0);
 
 	}
-
-
-
 </script>
 
 <script type="text/javascript" id="mainCode">
@@ -351,7 +319,7 @@
         const planeGeometry = new THREE.PlaneGeometry(30, 30, 20, 20);
         mesh = new THREE.Mesh(planeGeometry, teapotMaterialPlane);
         mesh.position.x = 50;
-        scene.add(mesh);
+        // scene.add(mesh);
 
 
         control = new function () {
@@ -359,7 +327,7 @@
             this.dirY = 0.0;
             this.dirZ = 1.0;
             this.shin = 30.0;
-            this.scale = 6.0;
+            this.scale = 1.0;
             this.edge = 0.0;
         }
         const gui = new dat.GUI();
