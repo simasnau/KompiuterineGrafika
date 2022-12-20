@@ -47,7 +47,6 @@
 				dollyCamera.position.x = 100;
 				dollyCamera.position.y = 20;
 				dollyCamera.position.z = -30;
-				dollyCamera.fov = 100;
 				dollyCamera.lookAt(scene.position);
 
 				const turningCameraHelper = new THREE.CameraHelper(turningCamera);
@@ -165,6 +164,14 @@
 				scene.add(dollyCameraModel);
 
 				const camControl = new THREE.TrackballControls(camera, renderer.domElement);
+
+				const startFov = 100;
+				const maxFov = 110;
+				const minFov = 70;
+				const fovDifference = maxFov - minFov;
+				const fovChange = fovDifference / 60;
+				dollyCamera.fov = startFov;
+
 				render();
 
 				function render() {
@@ -200,12 +207,10 @@
 
 					if (zooming) {
 						if (dollyCamera.fov < 150) {
-							dollyCamera.fov += fovDiff;
+							dollyCamera.fov += fovChange * 1.2;
 						}
 					} else {
-						if (dollyCamera.fov > 10) {
-							dollyCamera.fov -= fovDiff;
-						}
+						dollyCamera.fov -= fovChange * 1.2;
 					}
 
 					renderer.render(scene, camera);
